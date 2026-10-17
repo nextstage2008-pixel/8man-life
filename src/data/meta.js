@@ -1,0 +1,41 @@
+// データと計算の版。再現リンクと共有ページに入れ、古い版のリンクを見分ける。
+export const DATA_VERSION = '0.1.0';
+
+// 出典の一覧。データの各値の src はここのキーを指す。
+// 'industry-survey' は業界の調査を丸めた値（先生の判断で出典名を書かない。公開する束の説明書きにも書かない）。
+export const SOURCES = {
+  'industry-survey': { title: '業界の調査をもとに丸めた値', url: '', retrieved: '2026-10-17' },
+  'zeirishi-ho': { title: '税理士法（昭和26年法律第237号）', url: 'https://laws.e-gov.go.jp/law/326AC1000000237', retrieved: '2026-10-17' },
+  'kaikeishi-ho': { title: '公認会計士法（昭和23年法律第103号）', url: 'https://laws.e-gov.go.jp/law/323AC0000000103', retrieved: '2026-10-17' },
+  'bengoshi-ho': { title: '弁護士法（昭和24年法律第205号）', url: 'https://laws.e-gov.go.jp/law/324AC1000000205', retrieved: '2026-10-17' },
+  'kokkakomuin-ho': { title: '国家公務員法（昭和22年法律第120号）', url: 'https://laws.e-gov.go.jp/law/322AC0000000120', retrieved: '2026-10-17' },
+  'jinji-teinen': { title: '人事院「定年の段階的引上げ（令和5年4月1日～）に係る経緯」', url: 'https://www.jinji.go.jp/seisaku/kyuyoshogaisekkei/teinen_0007.html', retrieved: '2026-10-17' },
+  'nta-exam-kokoku': { title: '国税庁「税理士試験公告」（令和3〜7年度）', url: 'https://www.nta.go.jp/taxes/zeirishi/zeirishishiken/shikenkekka/kokoku/74.htm', retrieved: '2026-10-17' },
+  'nta-toroku': { title: '国税庁「税理士の登録」', url: 'https://www.nta.go.jp/taxes/zeirishi/zeirishiseido/toroku/touroku.htm', retrieved: '2026-10-17' },
+  'nta-shikaku-minaoshi': { title: '国税庁「税理士試験の受験資格の見直しについて」', url: 'https://www.nta.go.jp/taxes/zeirishi/zeirishishiken/shikaku/01.pdf', retrieved: '2026-10-17' },
+  'nta-exam-r7': { title: '国税庁「令和7年度（第75回）税理士試験結果表」', url: 'https://www.nta.go.jp/taxes/zeirishi/zeirishishiken/shikenkekka/75/pdf/0025011-071-15.pdf', retrieved: '2026-10-17' },
+  'nta-exam-r5': { title: '国税庁「令和5年度（第73回）税理士試験結果表」', url: 'https://www.nta.go.jp/taxes/zeirishi/zeirishishiken/shikenkekka/73/pdf/kekka.pdf', retrieved: '2026-10-17' },
+  'nta-exam-r3': { title: '国税庁「令和3年度（第71回）税理士試験結果」', url: 'https://www.nta.go.jp/taxes/zeirishi/zeirishishiken/shikenkekka/71/kekka.htm', retrieved: '2026-10-17' },
+  'nta-exam-r1': { title: '国税庁「令和元年度（第69回）税理士試験結果」', url: 'https://www.nta.go.jp/taxes/zeirishi/zeirishishiken/shikenkekka/69/kekka.htm', retrieved: '2026-10-17' },
+  'nta-nenpo-zeirishi-r7': { title: '国税庁 統計年報（令和7年度版）20-7 税理士（登録者数・通知弁護士数）', url: 'https://www.nta.go.jp/publication/statistics/kokuzeicho/sonota2025/zeirishi/xls/20_zeirishi.xlsx', retrieved: '2026-10-17' },
+  'fsa-cpa-r7': { title: '金融庁 公認会計士・監査審査会「令和7年公認会計士試験 合格者調」', url: 'https://www.fsa.go.jp/cpaaob/kouninkaikeishi-shiken/r7shiken/ronbungoukaku_r07/03.pdf', retrieved: '2026-10-17' },
+  'moj-shiho-r7': { title: '法務省「令和7年司法試験の採点結果」', url: 'https://www.moj.go.jp/content/001450175.pdf', retrieved: '2026-10-17' },
+  'jinji-2025': { title: '人事院「2025年度国家公務員採用試験実施状況」（国税専門官・税務職員）', url: 'https://www.jinji.go.jp/content/000009521.pdf', retrieved: '2026-10-17' },
+  'nta-teiin-r8': { title: '国税庁「令和8年度 国税庁の定員・機構」', url: 'https://www.nta.go.jp/information/release/kokuzeicho/2026/teiin_kiko/index.htm', retrieved: '2026-10-17' },
+  'ipss-suikei-r5': { title: '国立社会保障・人口問題研究所「日本の将来推計人口（令和5年推計）」', url: 'https://www.ipss.go.jp/pp-zenkoku/j/zenkoku2023/pp_zenkoku2023.asp', retrieved: '2026-10-17' },
+  'ipss-jnfs17': { title: '国立社会保障・人口問題研究所「第17回出生動向基本調査 結果の概要」', url: 'https://www.ipss.go.jp/ps-doukou/j/doukou17/JNFS17gaiyo.pdf', retrieved: '2026-10-17' },
+  'ipss-popular-t12-27': { title: '国立社会保障・人口問題研究所「人口統計資料集 表12-27 都道府県別出生数および率」', url: 'https://www.ipss.go.jp/syoushika/tohkei/Data/Popular2021/T12-27.files/sheet001.htm', retrieved: '2026-10-17' },
+  'mhlw-jinko-gaisu-r6': { title: '厚生労働省「令和6年（2024）人口動態統計月報年計（概数）の概況」', url: 'https://www.mhlw.go.jp/toukei/saikin/hw/jinkou/geppo/nengai24/dl/gaikyouR6.pdf', retrieved: '2026-10-17' },
+  'mhlw-jinko-kakutei-r6': { title: '厚生労働省「令和6年（2024）人口動態統計（確定数）の概況」', url: 'https://www.mhlw.go.jp/toukei/saikin/hw/jinkou/kakutei24/dl/15_gaikyouR06.pdf', retrieved: '2026-10-17' },
+  'mext-gakko-kihon-h30': { title: '文部科学省「平成30年度学校基本調査（確定値）の公表について」', url: 'https://www.mext.go.jp/component/b_menu/other/__icsFiles/afieldfile/2018/12/25/1407449_1.pdf', retrieved: '2026-10-17' },
+  'mhlw-kenko-eiyo-r1': { title: '厚生労働省「令和元年 国民健康・栄養調査結果の概要」', url: 'https://www.mhlw.go.jp/content/10900000/000687163.pdf', retrieved: '2026-10-17' },
+  'nta-zeirishi-kaisei-2001': { title: '国税庁「税理士法の一部を改正する法律案」の概要（平成13年）', url: 'https://www.nta.go.jp/about/council/shingikai/010409/shiryo/p33.htm', retrieved: '2026-10-17' },
+  'etax-history': { title: '国税庁 e-Tax「e-Taxについて知る（沿革）」', url: 'https://www.e-tax.nta.go.jp/gaiyo/history.htm', retrieved: '2026-10-17' },
+  'nta-ta-6359': { title: '国税庁 タックスアンサー No.6359（税率の経過措置の記載）', url: 'https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6359.htm', retrieved: '2026-10-17' },
+  'nta-ta-6102': { title: '国税庁 タックスアンサー No.6102 消費税の軽減税率制度', url: 'https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6102.htm', retrieved: '2026-10-17' },
+  'nta-invoice': { title: '国税庁「インボイス制度について」', url: 'https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/invoice_about.htm', retrieved: '2026-10-17' },
+  'nta-denchoho': { title: '国税庁「令和6年1月からの電子取引データの保存方法」', url: 'https://www.nta.go.jp/law/joho-zeikaishaku/sonota/jirei/tokusetsu/pdf/0023011-012.pdf', retrieved: '2026-10-17' },
+  'imagined': { title: '想像の出来事（実際の出来事ではありません）', url: '', retrieved: '2026-10-17' },
+  'agora-kanpou': { title: 'アゴラ「税理士試験 官報合格までの平均年数（開示請求のデータ）」（公式ではない）', url: 'https://agora-web.jp/?p=267573', retrieved: '2026-10-17' },
+  'nta-gakui-menjo': { title: '国税庁「改正税理士法の『学位による試験科目免除』制度のQ＆A」', url: 'https://www.nta.go.jp/taxes/zeirishi/zeirishishiken/kaisei-qa/menu.htm', retrieved: '2026-10-17' },
+};
