@@ -1,4 +1,4 @@
-// データをたどって、推定の値（estimated: true）を集める。先生に見せる一覧と、データの解説に使う。
+// データをたどって、推定の値（estimated: true）を集める。推定の値の一覧と、データの解説に使う。
 export function listEstimates(node, path = '', out = []) {
   if (node === null || typeof node !== 'object') return out;
   if (node.estimated === true) {

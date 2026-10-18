@@ -56,7 +56,7 @@ export function lifeSentence(m) {
 }
 
 // 投稿文（設計書6.7の型）。280に収まるまで、重みの低い見どころから落とす
-// handle：先生の X のアカウント名（あれば「作 Yasu@（@名前）」にして、投稿から先生のアカウントへたどれるようにする）
+// handle：作者の X のアカウント名（あれば「作 Yasu@（@名前）」にして、投稿から作者のアカウントへたどれるようにする）
 export function postText(m, url, { handle = '' } = {}) {
   const author = handle ? `作 Yasu@（@${handle}）` : '作 Yasu@';
   const build = kept => {

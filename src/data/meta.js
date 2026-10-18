@@ -2,7 +2,7 @@
 export const DATA_VERSION = '0.2.0';
 
 // 出典の一覧。データの各値の src はここのキーを指す。
-// 'industry-survey' は業界の調査を丸めた値（先生の判断で出典名を書かない。公開する束の説明書きにも書かない）。
+// 'industry-survey' は業界の調査をもとに丸めた値。
 export const SOURCES = {
   'industry-survey': { title: '業界の調査をもとに丸めた値', url: '', retrieved: '2026-10-17' },
   'zeirishi-ho': { title: '税理士法（昭和26年法律第237号）', url: 'https://laws.e-gov.go.jp/law/326AC1000000237', retrieved: '2026-10-17' },

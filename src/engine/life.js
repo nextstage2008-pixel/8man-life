@@ -41,7 +41,7 @@ export function summarize(s, decisions, data) {
     },
     paths: [...(c.paths ?? [])], specialty: c.specialty ?? null,
     arcs: (s.arcLog ?? []).map(r => ({ id: r.id, done: r.done, steps: r.steps.map(x => ({ ...x })) })),
-    money: moneySummary(s), univ: s.flags.has('will-univ'),
+    money: moneySummary(s),
     kaigyoAt: c.kaigyoAt, retiredAt: c.retiredAt, workHistory: [...(c.workHistory ?? [])], successor: c.successor,
     deathAge: s.deathAge, deathCause: s.deathCause, decisions,
     peers: (s.peers ?? []).map(p => ({ surname: p.surname, name: p.name, sex: p.sex, outcomes: p.outcomes.map(o => ({ age: o.age, kind: o.kind })) })),

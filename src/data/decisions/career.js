@@ -89,7 +89,7 @@ export const EMP_RETIRE = {
   apply: (k) => ({ lines: [], apply: st => { st.career.retirePlan = k === 'retire' ? 'retire' : 'zokko'; } }),
 };
 
-// ── 税理士になってからの道の「いろいろ」（先生の指示：開業しても所属しても、いろいろな人生に） ──
+// ── 税理士になってからの道の「いろいろ」（開業しても所属しても、いろいろな人生に） ──
 const addPath = (st, p) => { const a = (st.career.paths = st.career.paths ?? []); if (!a.includes(p)) a.push(p); };
 export { addPath };
 

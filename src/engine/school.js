@@ -35,7 +35,7 @@ function payHouse(s, amount, data, lines) {
   }
 }
 
-// 大学院の学費：若いうち（30歳まで）で家に余裕があれば親が出し、なければ自分の貯蓄から、足りなければ奨学金（先生の指摘 10/18）
+// 大学院の学費：若いうち（30歳まで）で家に余裕があれば親が出し、なければ自分の貯蓄から、足りなければ奨学金
 function payGrad(s, cost, data, lines, first) {
   const m = s.money;
   const say = text => { if (first) lines.push({ kind: 'ev', text }); };

@@ -1,4 +1,4 @@
-// 税理士になってからの割合。業界の調査を丸めた値（先生の判断で出典名は書かない）と推定。
+// 税理士になってからの割合。業界の調査をもとに丸めた値と推定。
 export const CAREER = {
   // 登録者の働き方（開業・社員・所属）。所属には企業内も含める
   workStyleShare: { value: { kaigyo: 0.7, shain: 0.1, shozoku: 0.2 }, src: 'industry-survey' },
