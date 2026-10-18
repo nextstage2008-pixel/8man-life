@@ -11,8 +11,12 @@ import { hasDanger, markSuppressed, isSuppressed, suppressFromAfter } from './co
 import { decodeReplay, postText, xIntentUrl, shareLink } from './core/share.js';
 import { saveProgress, loadProgress, clearProgress, shouldClearProgress } from './core/save.js';
 import { startView } from './views/start.js';
+import { pickLitPref } from './views/japan-map.js';
 import { birthView } from './views/birth.js';
-import { lifeHeader, yearCard, lineHtml, controlsView } from './views/life.js';
+import { lifeBar, statsBlock, sceneBlock, yearCard, lineHtml, controlsView } from './views/life.js';
+import { sceneOf, sceneLayout } from './core/scene.js';
+import { drawScene } from './scene-canvas.js';
+import { emptyLog, addToLog } from './core/log-order.js';
 import { decisionSheet } from './views/decision.js';
 import { endView } from './views/end.js';
 import { trackingRefused, livesPayload, sameChoiceRows, passYearsChart } from './core/minna.js';
@@ -52,12 +56,29 @@ function stop() {
   S.raf = 0;
 }
 
+// 最初の画面の地図：3秒ごとに出生数の重みで1県を選び、その丸を1.5秒だけ灯す（動きを減らす設定なら動かさない）
+let mapTimer = 0;
+function startMapLights() {
+  clearInterval(mapTimer);
+  mapTimer = 0;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  mapTimer = setInterval(() => {
+    const map = app.querySelector('.jp-map');
+    if (S.screen !== 'start' || !map) { clearInterval(mapTimer); mapTimer = 0; return; }
+    const name = pickLitPref(DATA.PREFS, Math.random());
+    const dots = [...map.querySelectorAll('.pref-dot')].filter(d => d.dataset.pref === name);
+    dots.forEach(d => d.classList.add('lit'));
+    setTimeout(() => dots.forEach(d => d.classList.remove('lit')), 1500);
+  }, 3000);
+}
+
 function showStart(notice = null) {
   stop();
   S.screen = 'start';
   const p = loadProgress(store, VERSION);
   app.innerHTML = startView({ birthMode: S.birthMode, resumable: p ? { label: p.label } : null, notice });
   window.scrollTo(0, 0);
+  startMapLights();
   // これまでに見届けられた人生の数（サーバーがなければ出さない）
   getJson('/api/stats').then(s => {
     const el = app.querySelector('[data-role="lives"]');
@@ -84,7 +105,10 @@ function beginLife() {
   S.player = createPlayer(S.config, { data: DATA, world: WORLD, answers: S.pendingAnswers, fast: S.fast });
   S.player.setSpeed(Number(getPref('8man.speed', 1)) || 1);
   S.years = new Map();
-  app.innerHTML = '<div class="screen life"><div id="profile"></div><section id="log" class="log" aria-live="polite"></section></div><div class="controls-wrap" id="controls"></div><div class="sheet-wrap" id="sheet" hidden></div>';
+  S.log = emptyLog();
+  S.sceneState = null;
+  S.sceneSig = '';
+  app.innerHTML = '<div class="screen life"><div id="bar"></div><div id="scene"></div><div id="stats"></div><section id="log" class="log" aria-live="polite"></section></div><div class="controls-wrap" id="controls"></div><div class="sheet-wrap" id="sheet" hidden></div>';
   renderControls();
   updateProfile(0, S.card.birthYear);
   window.scrollTo(0, 0);
@@ -98,36 +122,57 @@ function beginLife() {
   S.raf = requestAnimationFrame(loop);
 }
 
+// 記録は新しい順（本家と同じ）。上に新しい行と場面の絵が来るので、下へは送らない
 function handle(events) {
   if (!events.length) return;
-  const nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 200;
   for (const e of events) {
     if (e.type === 'line') addLine(e.line);
-    else if (e.type === 'decision') showDecision(e.view);
+    else if (e.type === 'decision') { drawLatestScene(); showDecision(e.view); }
     else if (e.type === 'end') { showEnd(); return; }
   }
-  if (nearBottom) window.scrollTo(0, document.body.scrollHeight);
+  drawLatestScene();
 }
 
+// 新しい年のカードはいちばん上に作り、行はそのカードの見出しのすぐ下（＝いちばん上）に足す（core/log-order.js の決まり）
 function addLine(line) {
+  const r = addToLog(S.log, line);
+  S.log = r.log;
+  if (line.scene) S.sceneState = line.scene;
   let el = S.years.get(line.age);
-  if (!el) {
+  if (r.op.newCard || !el) {
     document.querySelector('.year-card.current')?.classList.remove('current');
     const box = document.createElement('div');
     box.innerHTML = yearCard({ age: line.age, year: line.year, lines: [], current: true });
     el = box.firstElementChild;
-    document.getElementById('log').appendChild(el);
+    document.getElementById('log').prepend(el);
     S.years.set(line.age, el);
     updateProfile(line.age, line.year);
   }
   const html = lineHtml(line);
-  if (html) el.insertAdjacentHTML('beforeend', html);
+  if (html) el.querySelector('.year-head').insertAdjacentHTML('afterend', html);
+}
+
+// 場面の絵：いちばん新しい行の状態で、変わったときだけ描き直す
+function drawLatestScene() {
+  const box = document.getElementById('scene');
+  if (!S.sceneState || !box) return;
+  const sc = sceneOf(S.sceneState);
+  const sig = JSON.stringify(sc);
+  if (sig === S.sceneSig) return;
+  S.sceneSig = sig;
+  if (!box.firstElementChild) box.innerHTML = sceneBlock({ caption: sc.caption });
+  else {
+    box.querySelector('.scene-caption').textContent = sc.caption;
+    box.querySelector('canvas').setAttribute('aria-label', sc.caption);
+  }
+  drawScene(box.querySelector('canvas'), sceneLayout(sc), 4);
 }
 
 function updateProfile(age, year) {
   const last = S.player?.trace.at(-1);
   const st = statusOf(last ?? { age, career: {} }, 'exam', DATA);
-  document.getElementById('profile').innerHTML = lifeHeader({ card: S.card, age, year, ...st, stats: last?.stats ?? S.card.stats });
+  document.getElementById('bar').innerHTML = lifeBar({ card: S.card, age, year, roleLabel: st.roleLabel });
+  document.getElementById('stats').innerHTML = statsBlock({ subjects: st.subjects, stats: last?.stats ?? S.card.stats });
 }
 
 function renderControls() {
@@ -184,6 +229,8 @@ function showEnd() {
   S.sharePromise = null;
   S.shareUrl = shareLink(`${location.origin}${location.pathname}`, { ...S.shareInfo, suppressFrom: S.config.suppressFrom }, p.summary, DATA, WORLD);
   app.innerHTML = endView(S.result, { supportLines: SUPPORT_LINES });
+  const endCanvas = app.querySelector('[data-role="end-scene"]');
+  if (endCanvas && S.result.scene) drawScene(endCanvas, sceneLayout(S.result.scene), 4);
   window.scrollTo(0, 0);
   sendLife(p);
 }

@@ -37,7 +37,7 @@ export async function drawCard(canvas, layout) {
 }
 
 export async function saveCard(model) {
-  const canvas = await drawCard(document.createElement('canvas'), cardLayout(model, { handle: SITE.authorHandle }));
+  const canvas = await drawCard(document.createElement('canvas'), cardLayout(model, { handle: SITE.authorHandle, scene: model.scene }));
   const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
   if (!blob) return;
   const a = document.createElement('a');

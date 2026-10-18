@@ -40,6 +40,7 @@ export function endView(m, { supportLines = [] } = {}) {
       <div class="avatar avatar-big" aria-hidden="true">${esc([...(m.given ?? m.name)][0] ?? '')}</div>
       <div><div class="rc-name">${esc(m.surname ? `${m.surname} ${m.given}` : m.name)}</div><div class="rc-meta">${esc(m.birthYear)}年 ${esc(m.pref)}生まれ · ${esc(m.deathAge)}歳</div></div>
     </div>
+    ${m.scene ? `<canvas class="scene-canvas rc-scene" data-role="end-scene" role="img" aria-label="${esc(m.scene.caption)}" width="512" height="160"></canvas>` : ''}
     <div class="rc-nums">${num(n1, l1)}${num(`${m.clientsMax}件`, '顧問先の最多')}${num(`${m.deathAge}歳`, m.causeLabel, true)}</div>
     <dl class="rc-rows">${row('科目の順', m.subjectLine)}${row('働いた所', m.workLine)}${row('同期4人', m.peers.map(p => `${p.name}：${p.text}`).join('／'))}</dl>
     <div class="rc-hash">#8万分の1</div>

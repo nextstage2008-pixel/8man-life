@@ -1,3 +1,4 @@
+import { sceneLayout } from './scene.js';
 // 札の画像（縦長 1080×1350・名刺風・C カード）の文字と四角の配置。描くのは card.js（Canvas）。
 // 文字の幅は「全角1・半角0.5」×文字の大きさで見積もり、どの文字も札の内側（60〜1020）に収める。
 // 手で書いた文（ひとこと・振り返り）は使わない。
@@ -56,7 +57,17 @@ function firstNum(m) {
 }
 
 // handle：先生の X のアカウント名（あれば「作 Yasu@（@名前）」。札は画像でリンクにできないので名前で探せるようにする）
-export function cardLayout(m, { handle = '' } = {}) {
+// scene：最期の場面（core/scene.js の sceneOf）。あれば大きな数字の下に、ドット絵を3倍（384×120）で入れる
+// （4倍だと下の行が足りず、まれさの「（概算）」が切れた）
+const SCENE = { x: 348, y: 654, scale: 3 };
+function sceneItems(scene) {
+  const { items } = sceneLayout(scene);
+  return items.map(it => (it.kind === 'text'
+    ? { kind: 'text', text: it.text, x: SCENE.x + it.x * SCENE.scale, y: SCENE.y + it.y * SCENE.scale, size: it.size * SCENE.scale, color: it.color, weight: 700, align: 'left', part: 'scene' }
+    : { kind: 'rect', x: SCENE.x + it.x * SCENE.scale, y: SCENE.y + it.y * SCENE.scale, w: it.w * SCENE.scale, h: it.h * SCENE.scale, color: it.color, radius: 0, part: 'scene' }));
+}
+
+export function cardLayout(m, { handle = '', scene = null } = {}) {
   const items = [];
   const rect = (x, y, w, h, color, radius = 0) => items.push({ kind: 'rect', x, y, w, h, color, radius });
   const text = (t, x, y, size, color, weight = 500, align = 'left') => items.push({ kind: 'text', text: t, x, y, size, color, weight, align });
@@ -85,18 +96,26 @@ export function cardLayout(m, { handle = '' } = {}) {
     text(v, x + 128, 545, sizeFor(v, 230, 60), color, 700, 'center');
     text(l, x + 128, 598, sizeFor(l, 230, 28), C.sub, 500, 'center');
   });
-  // 科目の順・働いた所・同期
-  let y = 712;
+  // 最期の場面（最後の暮らし）
+  if (scene) {
+    rect(SCENE.x - 10, SCENE.y - 10, 128 * SCENE.scale + 20, 40 * SCENE.scale + 20, C.soft, 24);
+    items.push(...sceneItems(scene));
+  }
+  // 科目の順・働いた所・同期（場面があれば、その下から）
+  let y = scene ? SCENE.y + 40 * SCENE.scale + 48 : 712;
+  // 入る行の数は (BOTTOM − y) ÷ 行の高さ。場面ありでは最後の行の線が 1190 まで下りられる（#8万分の1 の字の上 1200 に届かない）
+  const BOTTOM = scene ? 1236 : 1150;
   const VALUE_X = 300, SIZE = 32, LINE = 46, UNITS = Math.floor((X1 - VALUE_X) / SIZE);
   const rare = m.rarity ? `全国の税理士8万2,513人のうち、${m.pref}生まれで同じ道・同じ性別の人はおよそ${m.rarity.count.toLocaleString('ja-JP')}人（概算）` : '';
   const rows = [['科目の順', m.subjectLine], ['働いた所', m.workLine], ['同期4人', m.peerSummary ?? ''], ...(rare ? [['まれさ', rare]] : [])];
   rows.forEach(([label, value], i) => {
-    const room = Math.max(1, Math.floor((1150 - y) / LINE) - (rows.length - 1 - i));
+    const room = Math.max(1, Math.floor((BOTTOM - y) / LINE) - (rows.length - 1 - i));
     const lines = fit(wrapText(value, UNITS), Math.min(3, room), UNITS);
     text(label, X0, y, 30, C.sub);
     lines.forEach((l, k) => text(l, VALUE_X, y + k * LINE, SIZE, C.ink));
-    y += lines.length * LINE + 22;
+    y += lines.length * LINE + (scene ? 14 : 22);
   });
-  text('#8万分の1', X0, 1232, 32, C.blue, 700);
+  // 場面ありでは行が下まで来るので、#8万分の1 を少し下げて間を空ける
+  text('#8万分の1', X0, scene ? 1252 : 1232, 32, C.blue, 700);
   return { width: W, height: H, items };
 }

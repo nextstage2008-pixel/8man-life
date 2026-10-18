@@ -4,6 +4,8 @@ export function createState() {
     seed: 0, era: 'heisei',
     birthYear: 0, age: 0, pref: '', residence: '', sex: 'male', name: '', surname: '', tier: 3,
     parents: [], siblings: [], spouse: null, children: [], grandchildren: [],
+    // 一緒に暮らす人（場面の絵だけが使う。engine/scene-state.js）
+    home: { leftParents: false, parentsBack: false, apartUntil: null, kidsOut: new Set() },
     // 健康・幸福・知識・人間関係（0〜100）
     stats: { hl: 85, h: 60, sm: 50, so: 60 },
     talent: 0, aptitude: 0,

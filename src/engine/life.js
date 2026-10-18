@@ -7,6 +7,7 @@ import { planYear, endYear, historyLine } from './year.js';
 import { fireEvent } from './events.js';
 import { buildWorld } from './world.js';
 import { DATA } from '../data/index.js';
+import { homeFxOf, applyHome, sceneState } from './scene-state.js';
 
 // 出来事・分かれ道・仕組みの置き場（world.js でまとめる）
 export const WORLD = buildWorld();
@@ -70,7 +71,13 @@ export function* runLife(config, data = DATA, world = WORLD) {
   const s = birth(config, data);
   const decisions = [];
   const ask = { choices: config.choices ? [...config.choices] : null, decisions };
-  for (const line of birthLines(s)) yield { kind: 'line', line };
+  // 行には、その時の場面の状態を添える（文から一緒に暮らす人を決める。結果には使わない）
+  const out = line => {
+    const fx = homeFxOf(line.text);
+    if (fx) applyHome(s, fx, line.age);
+    return { kind: 'line', line: { ...line, scene: sceneState(s, line.age) } };
+  };
+  for (const line of birthLines(s)) yield out(line);
   while (s.alive) {
     // 途中で危ない言葉が書かれたら、その年齢から先は自殺の判定をしない（画面が config.suppressFrom を入れる）
     if (config.suppressFrom != null && s.age >= config.suppressFrom) s.suppressSuicide = true;
@@ -79,7 +86,7 @@ export function* runLife(config, data = DATA, world = WORLD) {
     const ctx = { rng, year, age: s.age, data, t: 0, world, ask };
     if (!s.imagineShown && year >= data.IMAGINE_LINE_YEAR) {
       s.imagineShown = true;
-      yield { kind: 'line', line: { age: s.age, year, t: 0, kind: 'imagine', text: 'ここから先は想像です。' } };
+      yield out({ age: s.age, year, t: 0, kind: 'imagine', text: 'ここから先は想像です。' });
     }
     for (const it of planYear(s, data, rng, world)) {
       if (!s.alive) break;
@@ -89,12 +96,12 @@ export function* runLife(config, data = DATA, world = WORLD) {
       else if (it.type === 'history') { const l = historyLine(it.ref, s, year); lines = l ? [l] : []; }
       else if (it.type === 'fixed') lines = withWhen(it.run(s, ctx) ?? [], s.age, year, it.t);
       else if (it.type === 'decision') lines = it.ref.needs && !it.ref.needs(s, ctx) ? [] : yield* world.askDecision(it.ref, s, ctx);
-      for (const line of lines) yield { kind: 'line', line };
+      for (const line of lines) yield out(line);
     }
     if (!s.alive) break;
     // その年の途中（振り返り）で判定止めが入ったら、その年の終わりの判定から止める
     if (config.suppressFrom != null && s.age >= config.suppressFrom) s.suppressSuicide = true;
-    for (const line of endYear(s, data, rng, world)) yield { kind: 'line', line };
+    for (const line of endYear(s, data, rng, world)) yield out(line);
     // 毎年の記録（数値と、画面の上の欄に出す立場と合格した科目）
     config.trace?.push({ age: s.age - (s.alive ? 1 : 0), stats: { ...s.stats }, career: { phase: s.career.phase, workStyle: s.career.workStyle ?? null, passed: [...(s.career.passed ?? [])], exemptTax: !!s.career.exemptTax, exemptAcc: !!s.career.exemptAcc } });
   }

@@ -1,4 +1,5 @@
 // 最期と結果の画面と、札・投稿文のためのモデル（設計書6.7）。再生機の結果 { lines, summary, trace } から作る。
+import { sceneOf, lastScene } from './scene.js';
 
 const ROUTE_LABEL = { exam: '税理士試験', 'tax-office': '税務署', cpa: '公認会計士', lawyer: '弁護士' };
 const ROUTE_FROM = { exam: '税理士試験から', 'tax-office': '税務署から', cpa: '公認会計士から', lawyer: '弁護士から' };
@@ -101,5 +102,7 @@ export function resultModel({ lines, summary: s, trace }, data) {
     finalLines: finalAt >= 0 ? lines.slice(finalAt) : [],
     suicide: s.deathCause === 'suicide',
     seed: s.seed,
+    // 最期の札の場面（最後の暮らし。題名と場面の絵の設計書 4.4）
+    scene: (st => (st ? sceneOf(st) : null))(lastScene(lines)),
   };
 }

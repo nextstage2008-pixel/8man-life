@@ -3,6 +3,9 @@ import { esc } from '../core/escape.js';
 import { authorLink } from './author.js';
 import { SITE } from '../site.js';
 import { serverEnabled } from '../core/net.js';
+import { japanMapSvg } from './japan-map.js';
+import { PREFS } from '../../data/prefs.js';
+import { PREF_GEO } from '../../data/pref-geo.js';
 
 const ERAS = [
   { label: '平成', sub: '2000年ごろ生まれ', ready: true },
@@ -23,7 +26,10 @@ export function startView({ birthMode = 'births', resumable = null, notice = nul
   const mode = (value, label, sub) => `<button class="option" type="button" data-action="mode" data-value="${value}" aria-pressed="${birthMode === value}"><span class="option-label">${esc(label)}</span><span class="option-sub">${esc(sub)}</span></button>`;
   return `<div class="screen start">
   <header class="start-head">
-    <h1 class="title">8万分の1</h1>
+    <div class="map-wrap">${japanMapSvg(PREFS, PREF_GEO)}</div>
+    <p class="kicker">税理士の一生シミュレーター</p>
+    <p class="kicker-sub">公的な統計にもとづく</p>
+    <h1 class="title">8万分の<span class="one">1</span></h1>
     <p class="lead">税理士として登録している8万2,513人の中から、1人の一生を引きます。生まれた日から最期の日まで、分かれ道だけを選んで見届けてください。</p>
     <p class="lives" data-role="lives" hidden></p>
   </header>

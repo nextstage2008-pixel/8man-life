@@ -43,9 +43,20 @@ button:disabled { cursor: default; }
 .tag-line { border: 1px solid var(--blue); color: var(--blue); padding: 1px 7px; }
 
 /* 最初の画面 */
-.start-head { padding: 18px 4px 6px; }
-.title { font-size: 34px; font-weight: 700; color: var(--blue); margin: 0 0 8px; letter-spacing: 0.04em; }
-.lead { font-size: 14px; line-height: 1.8; margin: 0; }
+.start-head { padding: 0 4px 6px; }
+/* 点の日本地図（丸は県ごとの出生数。光るのは main.js が出生数の重みで選んだ県） */
+.map-wrap { margin: -14px -20px 0; }
+.jp-map { display: block; width: 100%; height: auto; }
+.jp-grid circle { fill: #D5DCE6; }
+.okinawa-box { fill: none; stroke: #C9D2DE; stroke-dasharray: 3 3; }
+.pref-dot { fill: var(--blue); fill-opacity: 0.55; stroke: #FFFFFF; stroke-width: 1; transition: fill 0.6s, fill-opacity 0.6s; }
+.pref-dot.lit { fill: var(--orange); fill-opacity: 0.85; }
+@media (prefers-reduced-motion: reduce) { .pref-dot { transition: none; } }
+.kicker { font-size: 21px; font-weight: 700; color: var(--blue); letter-spacing: 0.02em; margin: 6px 0 0; line-height: 1.5; }
+.kicker-sub { font-size: 16px; font-weight: 700; color: var(--sub); margin: 2px 0 6px; }
+.title { font-size: 46px; font-weight: 700; color: var(--ink); margin: 0 0 8px; letter-spacing: 0.03em; }
+.title .one { color: var(--orange); }
+.lead { font-size: 14px; line-height: 1.8; margin: 0; color: var(--sub); }
 .options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .option { min-height: 56px; border: 2px solid var(--rule); border-radius: 14px; background: var(--card); padding: 8px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; }
 .option[aria-pressed="true"] { border-color: var(--blue); }
@@ -70,7 +81,7 @@ button:disabled { cursor: default; }
 
 /* 人生の画面 */
 .life { min-height: 100vh; padding-bottom: 0; }
-#profile { position: sticky; top: 8px; z-index: 2; }
+#bar { position: sticky; top: 8px; z-index: 2; }
 .profile { background: var(--card); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 6px rgba(29, 39, 51, 0.08); }
 .profile-top { display: flex; align-items: center; gap: 12px; }
 .avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--blue); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; }
@@ -185,3 +196,11 @@ a.btn-primary, a.btn-soft, a.btn-plain { display: flex; align-items: center; jus
 .author-link { color: inherit; }
 .support, .support-box { overflow-wrap: anywhere; }
 .support a, .support-box a { color: inherit; font-weight: 700; }
+
+/* 場面の絵（題名と場面の絵の設計書 4.4）。角ばったまま拡大する */
+.profile-bar { padding: 10px 14px; }
+.scene-card { padding: 10px; }
+.scene-canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; border-radius: 10px; background: var(--soft); }
+.scene-caption { margin: 6px 4px 0; font-size: 12px; color: var(--sub); line-height: 1.5; }
+.stats-card { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.rc-scene { margin: 2px 0; }
