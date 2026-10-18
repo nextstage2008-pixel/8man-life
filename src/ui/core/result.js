@@ -30,8 +30,9 @@ function subjectLine(s, lines) {
   const parts = groups.map(g => g.names.join('・'));
   const nintei = lines.filter(l => /国税審議会の認定を受け/.test(l.text));
   if (nintei.length) {
-    const kinds = [...new Set(nintei.map(l => (/会計の科目/.test(l.text) ? '会計' : '税法')))];
-    parts.push(kinds.length === 2 ? '大学院の免除（税法・会計）' : kinds[0] === '会計' ? '大学院の免除（会計）' : '大学院の免除');
+    // 分野は「残りの○○の科目が免除」で見る（税法の行の「あとは会計の科目です」に引っかからないように）
+    const kinds = [...new Set(nintei.map(l => (/残りの会計の科目が免除/.test(l.text) ? '会計' : '税法')))];
+    parts.push(kinds.length === 2 ? '大学院の免除（税法・会計）' : `大学院の免除（${kinds[0]}）`);
   }
   return parts.join(' → ');
 }
