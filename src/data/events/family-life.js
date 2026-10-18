@@ -64,8 +64,9 @@ export const FAMILY_LIFE_EVENTS = [
   E('kyodai-sodan', 30, 80, 0.08, [s => `${s.siblings[0].name}から、税金の相談の電話がかかってきました。`, s => `${s.siblings[0].name}と、親の家をどうするか話し合いました。`], { needs: s => s.siblings.length > 0 }),
   E('kyodai-sorai', 40, 90, 0.06, [s => `${s.siblings[0].name}と、何年も会っていないことに気づきました。`, s => `${s.siblings[0].name}と、久しぶりに二人で飲みました。`], { needs: s => s.siblings.length > 0 }),
   // 住まい
-  E('ie-kau', 30, 55, 0.08, ['家を買いました。ローンの返済の表を、自分で作りました。', '中古の家を買い、少しずつ手を入れていきました。'], { needs: s => !s.flags.has('ie') && s.age >= 30, fxFlag: 'ie' }),
-  E('ie-loan', 35, 70, 0.08, ['住宅ローンの繰り上げ返済をしました。', '住宅ローンを払い終え、銀行から書類が届きました。'], { needs: s => s.flags.has('ie') }),
+  // 家を買うと家のローン（money の house）。繰り上げ返済は、家のローンがあるときだけ（返し終えた一行は engine/money.js が出す）
+  E('ie-kau', 30, 55, 0.08, ['家を買いました。ローンの返済の表を、自分で作りました。', '中古の家を買い、少しずつ手を入れていきました。'], { needs: s => !s.flags.has('ie') && s.age >= 30, fxFlag: 'ie', money: [{ op: 'house' }] }),
+  E('ie-loan', 35, 70, 0.08, ['住宅ローンの繰り上げ返済をしました。', 'ボーナスで、住宅ローンを少し繰り上げて返しました。'], { needs: s => s.money.loans.some(l => l.kind === 'jutaku' && l.left > 0) && s.money.savings >= 300, money: [{ op: 'prepay', kind: 'jutaku', amount: 200 }] }),
   E('reform', 50, 85, 0.08, ['家の台所をリフォームしました。', '家の手すりを付けました。'], { needs: s => s.flags.has('ie') }),
   E('hikkoshi-life', 25, 80, 0.06, ['引っ越しをしました。荷物の半分は本でした。', '新しい町に引っ越し、近所の店を覚えるのに半年かかりました。']),
   E('niwa', 40, 95, 0.08, ['庭に小さな家庭菜園を作りました。', '庭のトマトが、今年は豊作でした。']),

@@ -13,7 +13,7 @@ export const PRE_DECISIONS = [
     build: () => ({ title: '文系か理系か', body: '進む道を決める時期になりました。', choices: [choice('bun', '文系に進む'), choice('ri', '理系に進む')] }),
     auto: { bun: 65, ri: 35 },
     apply: k => ({ lines: [{ text: k === 'bun' ? '数学が好きなまま、文系を選びました。' : '理系を選びました。将来のことは、まだ分かりませんでした。' }] }) }),
-  D('bukatsu-tsuzukeru', { ages: [14, 14], roles: ['student'], when: (s, ctx) => ctx.rng() < 0.4,
+  D('bukatsu-tsuzukeru', { ages: [14, 14], roles: ['student'], when: (s, ctx) => ctx.rng() < 0.4, needs: s => s.school.bukatsu,
     build: () => ({ title: '部活を続けますか', body: '受験の勉強の時間が足りなくなってきました。', choices: [choice('keep', '最後まで続ける'), choice('quit', 'やめて勉強する')] }),
     auto: { keep: 65, quit: 35 },
     apply: k => ({ lines: [{ text: k === 'keep' ? '最後の大会まで続けると決めました。' : '部活をやめ、塾に通うことにしました。' }], apply: st => (k === 'keep' ? bump(st, 'so', 3) : bump(st, 'sm', 3)) }) }),
@@ -24,7 +24,7 @@ export const PRE_DECISIONS = [
   D('shinro-18', { ages: [18, 18], when: () => true, needs: s => !s.flags.has('will-univ') && s.route !== 'tax-office',
     build: () => ({ title: '高校を出たらどうしますか', body: '進路を決める時期になりました。', choices: [choice('shushoku', '就職する'), choice('senmon', '専門学校で簿記を学ぶ')] }),
     auto: { shushoku: 55, senmon: 45 },
-    apply: k => ({ lines: [{ text: k === 'shushoku' ? '地元の会社に就職しました。' : '専門学校の会計の科に入りました。' }], apply: st => { if (k === 'senmon') st.flags.add('boki1'); else st.flags.add('shushoku'); } }) }),
+    apply: k => ({ lines: [{ text: k === 'shushoku' ? '地元の会社に就職しました。' : '専門学校の会計の科に入りました。' }], apply: st => { if (k === 'senmon') { st.flags.add('boki1'); st.school.senmon = true; st.schoolEndAge = 20; } else st.flags.add('shushoku'); } }) }),
   // 試験組
   D('yobiko-dokugaku', { roles: ['aspirant', 'examinee'], when: () => true, needs: s => s.route === 'exam' && s.career.examYears <= 1,
     build: () => ({ title: 'どうやって勉強しますか', body: '税理士試験の勉強の仕方を決めます。', choices: [choice('yobiko', '予備校に通う', '費用はかかるが、教材と講義がそろう'), choice('dokugaku', '独学でやる', '費用は少ないが、全部自分で決める')] }),

@@ -5,6 +5,7 @@ import { pickWeighted, randInt, normal } from './rng.js';
 import { clamp, odds } from './odds.js';
 import { TAX_OFFICE_TEXTS as TO, CPA_TEXTS as CT, LAWYER_TEXTS as LT } from '../data/events/routes-pre.js';
 import { TO_EARLY, CPA_MOVE, LAWYER_TAX } from '../data/decisions/routes-pre.js';
+import { applyMoneyOps, retirementLump } from './money.js';
 
 // 国家公務員の定年：60歳になる年度の定年（1963〜64年生まれ61歳 … 1971年生まれ以降65歳）
 export function teinenAge(birthYear, data) {
@@ -78,7 +79,6 @@ export const TAX_OFFICE_SYSTEM = {
     const c = s.career, D = ctx.data;
     const out = [];
     c.taxOfficeYears += 1;
-    s.money.income = Math.min(900, 280 + 15 * c.taxOfficeYears);
     // 役職：在職年数の区切りで、上がる人の割合（推定）に従って上がる
     const P = D.PRE.taxOffice.postsByYears;
     const step = P.steps.find(x => x.years === c.taxOfficeYears);
@@ -106,6 +106,11 @@ export const TAX_OFFICE_SYSTEM = {
     const teinen = teinenAge(s.birthYear, D);
     if (c.fullExempt && (c.retireEarly || s.age >= teinen)) {
       out.push(ln(say(TO.retire, s, ctx, { _age: s.age })));
+      // 税務署の退職金（国税専門官は大学卒、税務職員は高校卒の値）。勤続の年数で按分する
+      const lump = retirementLump(s, D.MONEY, served);
+      s.money.empYearsAtLump = s.money.empYears ?? 0;
+      applyMoneyOps(s, [{ op: 'earn', amount: lump }], D);
+      out.push(ln(`退職金は${Math.round(lump).toLocaleString('ja-JP')}万円でした。`));
       const style = ctx.rng() < 0.7 ? 'kaigyo' : 'shozoku';
       out.push(...register(s, ctx, style, style === 'kaigyo' ? '自分の事務所' : '税理士法人', TO.register));
     }
@@ -159,7 +164,6 @@ export const CPA_SYSTEM = {
     const c = s.career, D = ctx.data;
     const out = [];
     c.auditYears += 1;
-    s.money.income = 600 + 20 * c.auditYears;
     if (s.age === c.cpaShikakuAge) {
       if (needsKenshu(c.cpaPassYear, D)) { c.kenshuAge = s.age; out.push(ln(say(CT.kenshu, s, ctx))); }
       out.push(ln(say(CT.shikaku, s, ctx)));
@@ -213,7 +217,6 @@ export const LAWYER_SYSTEM = {
       c.workplaces.push('法律事務所');
       out.push(ln(say(LT.shushu, s, ctx), 'big'));
     } else if (c.phase === 'lawyer') {
-      s.money.income = 700;
       if (c.lawyerTax === 'notice' && c.noticeAge == null) { c.noticeAge = s.age; out.push(ln(say(LT.notice, s, ctx))); }
       if (c.lawyerTax === 'register') out.push(...register(s, ctx, 'kaigyo', '法律事務所（税理士として登録）', LT.register));
     }

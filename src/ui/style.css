@@ -204,3 +204,14 @@ a.btn-primary, a.btn-soft, a.btn-plain { display: flex; align-items: center; jus
 .scene-caption { margin: 6px 4px 0; font-size: 12px; color: var(--sub); line-height: 1.5; }
 .stats-card { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
 .rc-scene { margin: 2px 0; }
+
+/* 年収・貯蓄・借入金（数値の欄の下）と、最期のお金のまとめ */
+.money { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--rule); }
+.money-item { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.money-label { font-size: 11px; color: var(--sub); }
+.money-num { font-size: 15px; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
+.money-sub { display: block; font-size: 10px; font-weight: 500; color: var(--sub); }
+.money-sum { margin: 0; display: grid; gap: 6px; }
+.money-sum div { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.money-sum dt { color: var(--sub); white-space: nowrap; flex-shrink: 0; }
+.money-sum dd { margin: 0; font-weight: 700; text-align: right; }

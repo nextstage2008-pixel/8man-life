@@ -1,4 +1,4 @@
-// 家族・健康・心・振り返り。結婚は初婚年齢と50歳で未婚の割合に合わせて較正する。
+// 家族・健康・心。結婚は初婚年齢と50歳で未婚の割合に合わせて較正する。
 // 名前は家族の中で重ならない（usedNames）。孫は、子が結婚したあとにだけ生まれる。
 import { sayFresh } from './text.js';
 import { monthT } from './calendar.js';
@@ -7,12 +7,16 @@ import { clamp } from './odds.js';
 import { buildLifeTable } from './life-table.js';
 import { pickName } from './birth.js';
 import { FAMILY_TEXTS as T } from '../data/events/family.js';
-import { MARRY, SMOKE, DRINK, EXERCISE, MENTAL, MENTAL_AGAIN, REFLECT } from '../data/decisions/life.js';
+import { MARRY, SMOKE, DRINK, EXERCISE, MENTAL, MENTAL_AGAIN } from '../data/decisions/life.js';
+import { RENAI } from '../data/decisions/turning.js';
+import { applyMoneyOps } from './money.js';
 
 const ln = (text, kind = 'ev') => ({ kind, text });
 const say = sayFresh;
-const ACCEPT = 0.88; // 結婚の話で「結婚する」を選ぶ割合（おまかせの重みと同じ）
-const MU = -2.0, SIGMA = 6; // 起こりやすさの中心は初婚年齢の平均より2歳上（較正で決めた）
+// 出会いから結婚に進む割合：付き合う（おまかせ80%）×付き合った人が結婚に進む割合（結婚の話は翌年から毎年・「結婚する」88%・別れは年15%で、およそ98%）。50歳で未婚の割合の較正に使う
+const ACCEPT = 0.78;
+// 出会いの起こりやすさの中心は初婚年齢の平均より0.4歳上（付き合ってから結婚まで1年あまりかかるので、結婚の年齢は平均に近くなる。較正で決めた）
+const MU = -0.4, SIGMA = 6;
 
 // 年齢ごとの結婚の起こりやすさ h(a) = k·exp(−((a−μ)/σ)²/2)。50歳で未婚の割合に合うよう k を二分探索で決める
 const hazardK = new Map();
@@ -57,7 +61,9 @@ function preparePartner(s, ctx) {
 function marry(s, ctx, partner) {
   s.spouse = { ...partner, marriedAt: s.age };
   marriages(s).push({ from: s.age, to: null, end: null, name: partner.name });
-  s.childTarget = Number(pickWeighted(ctx.rng, Object.fromEntries(Object.entries(ctx.data.LIFE[s.era].childrenDist.value))));
+  // 子どもの人数は、結婚の翌年に分かれ道で決める（data/decisions/turning.js の KODOMO）
+  s.childTarget = null;
+  s.dating = null;
   s.nextChildAge = s.age + randInt(ctx.rng, 1, 3);
   return [ln(say(T.marry, s, ctx, { _name: partner.name }), 'big')];
 }
@@ -69,30 +75,14 @@ function endMarriage(s, kind) {
   if (kind === 'divorce') s.spouse.divorced = true;
 }
 
-// 節目（振り返りの問いを出す時期）を見つける
-function milestones(s) {
-  const c = s.career, out = [];
-  if (c.phase !== 'pre') out.push('aspire');
-  if (c.firstExamAge != null || c.phase === 'tax-office' || c.cpaPassAge === s.age || c.lawyerSince != null) out.push('start');
-  if (c.kanpouAge != null || c.fullExempt || c.cpaPassYear != null || c.lawPassed) out.push('shikaku');
-  if (c.kaigyoAt != null) out.push('kaigyo');
-  if (c.retiredAt != null) out.push('retire');
-  return out;
-}
-
 export const LIFE_SYSTEM = {
   id: 'life',
   plan(s, ctx) {
     const items = [];
     // 習慣の分かれ道（決まった年齢）
-    // たばこは全員に、お酒は半分、運動は6割の人に聞く（分かれ道の数を15〜20回に保つため）
-    const ASK = { smoke: 1, drink: 0.5, exercise: 0.6 };
+    // たばこは全員に、お酒は4割、運動は35%の人に聞く（分かれ道の数を25〜30回に保つため）
+    const ASK = { smoke: 1, drink: 0.4, exercise: 0.35 };
     for (const d of [SMOKE, DRINK, EXERCISE]) if (s.age === d.ages[0] && !s.decisionCounts.has(d.id) && ctx.rng() < ASK[d.id]) items.push({ t: monthT(6), type: 'decision', ref: d });
-    // 振り返り：前の年までに来た節目を一つずつ
-    if (s.reflectPending?.length) {
-      const kind = s.reflectPending.shift();
-      items.push({ t: 0.02, type: 'decision', ref: { ...REFLECT, build: st => REFLECT.build(Object.assign(Object.create(st), { _reflect: kind })) } });
-    }
     // 心の不調
     if (s.mentalPending) {
       s.mentalPending = false;
@@ -100,17 +90,26 @@ export const LIFE_SYSTEM = {
     } else if (s.mental?.k === 'alone' && s.age - s.mental.since >= 2 && !s.decisionCounts.has('mental-again')) {
       items.push({ t: monthT(3), type: 'decision', ref: MENTAL_AGAIN });
     }
-    // 結婚の話（統計の起こりやすさで来る）。離婚・死別のあとは再婚の話が少し来る
+    // 恋愛と結婚。出会い（統計の起こりやすさで来る）→ 付き合う → 1年以上たって結婚の話。離婚・死別のあとは再婚の出会いが少し来る
     const single = !married(s);
     if (single && s.age >= 18 && s.age <= 60) {
-      const h = s.spouse ? (s.age < 60 ? 0.04 : 0) : marryHazard(s.age, s.sex, ctx.data, s.era);
-      if (ctx.rng() < h) {
-        const partner = preparePartner(s, ctx);
-        items.push({ t: monthT(5), type: 'decision', ref: {
+      if (s.dating) {
+        const partner = s.dating.partner;
+        if (s.age >= s.dating.since + 1) items.push({ t: monthT(5), type: 'decision', ref: {
           ...MARRY,
           build: st => MARRY.build(Object.assign(Object.create(st), { _partner: partner.name })),
           apply: (k, st, cx) => (k === 'yes' ? { lines: marry(st, cx, partner) } : MARRY.apply(k)),
         } });
+      } else {
+        const h = s.spouse ? (s.age < 60 ? 0.04 : 0) : marryHazard(s.age, s.sex, ctx.data, s.era);
+        if (ctx.rng() < h) {
+          const partner = preparePartner(s, ctx);
+          items.push({ t: monthT(5), type: 'decision', ref: {
+            ...RENAI,
+            build: st => RENAI.build(Object.assign(Object.create(st), { _partner: partner.name })),
+            apply: (k, st, cx) => ({ ...RENAI.apply(k, st, cx), apply: st2 => { if (k === 'yes') st2.dating = { partner, since: st2.age }; } }),
+          } });
+        }
       }
     }
     return items;
@@ -123,7 +122,12 @@ export const LIFE_SYSTEM = {
     const schoolEnd = { univ: 22, senmon: 20, kou: 18 }[school];
     if (s.age === schoolEnd && s.aspireAge > s.age && s.career.phase === 'pre' && !s.flags.has('shushoku')) {
       s.flags.add('shushoku');
-      out.push(ln(say(T.firstJob[school], s, ctx)));
+      out.push(ln(say(T.firstJob[school === 'univ' && s.career.companyKind === 'kanko' ? 'univKanko' : school], s, ctx)));
+    }
+    // 付き合っている人と別れることもある（推定）
+    if (s.dating && s.age > s.dating.since && ctx.rng() < data.MONEY.turning.value.breakup) {
+      out.push(ln(`${s.dating.partner.name}と別れました。`, 'loss'));
+      s.dating = null;
     }
     // 子が生まれる
     if (married(s) && s.childTarget > s.children.length && s.age >= s.nextChildAge && femaleAgeOfCouple(s) <= 42) {
@@ -168,6 +172,7 @@ export const LIFE_SYSTEM = {
       } else if (ctx.rng() < (s.age - s.spouse.marriedAt < 20 ? 0.007 : 0.003)) {
         endMarriage(s, 'divorce');
         out.push(ln(say(T.divorce, s, ctx, { _name: s.spouse.name }), 'loss'));
+        applyMoneyOps(s, [{ op: 'spend', amount: data.MONEY.shocks.value.divorce, reason: 'divorce' }], data);
       }
     }
     // 病気（40歳から。たばこ・飲酒・運動・健康で起こりやすさが変わる。推定）
@@ -182,6 +187,7 @@ export const LIFE_SYSTEM = {
         const type = pickWeighted(ctx.rng, { cancer: 60, heart: 22, stroke: 18 });
         s.illnesses.push({ type, age: s.age });
         out.push(ln(say(T.ill[type], s, ctx), 'bad'));
+        applyMoneyOps(s, [{ op: 'spend', amount: data.MONEY.shocks.value.illness, reason: 'illness' }], data);
       }
     }
     // 心の不調：起こりやすさ（推定）。忙しく幸福が低いとき、別れのあと
@@ -194,9 +200,6 @@ export const LIFE_SYSTEM = {
       if (s.widowedAt != null && s.age - s.widowedAt <= 2) p += 0.05;
       if (ctx.rng() < p) { s.mentalPending = true; out.push(ln(say(T.mentalStart, s, ctx), 'bad')); }
     }
-    // 節目
-    s.reflectDone = s.reflectDone ?? new Set();
-    for (const m of milestones(s)) if (!s.reflectDone.has(m)) { s.reflectDone.add(m); (s.reflectPending = s.reflectPending ?? []).push(m); }
     return out;
   },
 };

@@ -6,6 +6,7 @@ import { clamp } from './odds.js';
 import { pickWeighted } from './rng.js';
 import { buildLifeTable } from './life-table.js';
 import { eligibleEvents, drawEvents } from './events.js';
+import { updateMoney, moneyMood, incomeOf, settleAtDeath } from './money.js';
 
 const PRE_PHASE_ROLES = ['aspirant', 'examinee', 'tax-office', 'cpa-exam', 'cpa', 'law-exam', 'lawyer'];
 const WORK_ROLE = { shozoku: 'employed', kigyonai: 'employed', shain: 'partner', kaigyo: 'owner' };
@@ -62,7 +63,7 @@ export function historyLine(h, s, year) {
 }
 
 // 数値の目標。毎年少しずつ近づける（健康25%・人間関係15%・幸福は下がるとき35%・上がるとき20%）。
-function targets(s) {
+function targets(s, data) {
   const a = s.age;
   let hl = a < 30 ? 90 : 90 - 0.7 * (a - 30);
   if (s.habits.smoke) hl -= 6;
@@ -75,21 +76,17 @@ function targets(s) {
   if (s.flags.has('lonely')) so -= 10;
   let h = 50 + (s.stats.so - 50) * 0.35 + (s.stats.hl - 60) * 0.2 + (isRegistered(s) ? 6 : 0);
   if (s.mental) h -= 12;
+  h += moneyMood(s, data);
   return { hl: clamp(hl, 5, 95), so: clamp(so, 5, 95), h: clamp(h, 5, 95) };
 }
 
-function updateStats(s) {
-  const tg = targets(s);
+function updateStats(s, data) {
+  const tg = targets(s, data);
   s.stats.hl = clamp(s.stats.hl + (tg.hl - s.stats.hl) * 0.25, 0, 100);
   s.stats.so = clamp(s.stats.so + (tg.so - s.stats.so) * 0.15, 0, 100);
   const k = tg.h < s.stats.h ? 0.35 : 0.2;
   s.stats.h = clamp(s.stats.h + (tg.h - s.stats.h) * k, 0, 100);
   s.flags.delete('busy-year');
-}
-
-// お金（万円/年）。くわしい額は仕事の仕組みが income を決め、ここでは貯金に回す。
-function updateMoney(s) {
-  s.money.savings = Math.max(0, s.money.savings + s.money.income * 0.1);
 }
 
 const tables = new Map();
@@ -111,7 +108,7 @@ export function die(s, cause, ctx, data) {
   s.alive = false;
   s.deathAge = s.age;
   s.deathCause = cause;
-  return [{ age: s.age, year: ctx.year, t: 0.97, kind: 'loss', text: `${s.age}歳で、${data.CAUSES[cause].label}のため亡くなりました。` }];
+  return [{ kind: 'loss', text: `${s.age}歳で、${data.CAUSES[cause].label}のため亡くなりました。` }, ...settleAtDeath(s, data)].map(l => ({ age: s.age, year: ctx.year, t: 0.97, ...l }));
 }
 
 // 死亡の判定。本人は必ず登録まで届くので、登録の前は判定しない（110歳で必ず亡くなる）。
@@ -127,9 +124,11 @@ export function endYear(s, data, rng, world) {
   const year = calendarYear(s.birthYear, s.age);
   const ctx = { rng, year, age: s.age, data, t: 0.96, world };
   const lines = [];
-  updateStats(s);
-  updateMoney(s);
+  updateStats(s, data);
   for (const sys of world.systems) if (sys.end && s.alive) lines.push(...sys.end(s, ctx).map(l => ({ age: s.age, year, t: 0.96, ...l, kind: l.kind ?? 'ev' })));
+  // お金：その年の年収が決まってから（仕事の仕組みの end のあと）、手取り・暮らし・返済・貯蓄（engine/money.js）
+  if (s.alive) s.money.income = incomeOf(s, data);
+  if (s.alive) lines.push(...updateMoney(s, data).map(l => ({ age: s.age, year, t: 0.96, ...l, kind: l.kind ?? 'ev' })));
   if (s.alive) lines.push(...(world.death ?? defaultDeath)(s, ctx));
   if (s.alive) s.age += 1;
   return lines;

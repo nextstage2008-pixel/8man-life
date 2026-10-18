@@ -99,6 +99,7 @@ export function resultModel({ lines, summary: s, trace }, data) {
     highlights: highlights(s),
     timeline: lines.filter(l => l.kind === 'big' && l.source !== 'history').map(l => ({ age: l.age, year: l.year, text: l.text })),
     stats: { hl: series('hl'), h: series('h'), sm: series('sm'), so: series('so') },
+    money: s.money ? { ...s.money } : null,
     rarity: rarity(s, data),
     finalLines: finalAt >= 0 ? lines.slice(finalAt) : [],
     suicide: s.deathCause === 'suicide',

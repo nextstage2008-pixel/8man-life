@@ -26,3 +26,13 @@ export function clearProgress(storage) {
 export function shouldClearProgress(saved, config) {
   return !!saved && saved.seed === config.seed && saved.birthMode === config.birthMode;
 }
+
+// 前の版の保存が残っているか（版が変わると「続きから」は使えない。最初の画面で一度だけ知らせる）
+export function staleProgress(storage, currentVersion) {
+  try {
+    const p = JSON.parse(storage?.getItem(KEY) ?? 'null');
+    return !!p && typeof p === 'object' && p.version !== currentVersion;
+  } catch {
+    return false;
+  }
+}

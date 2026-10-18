@@ -1,9 +1,11 @@
 // 分かれ道のしくみ。題・本文・出典つきの事実・選択肢（ヒントつき）・結果の処理で作る。
 // 分かれ道の形：{ id, ages?, years?, roles?, needs?, when(s,ctx), build(s,ctx), auto, apply(k,s,ctx),
 //   remember?, certainSkip?(s,ctx), maxPerLife?（既定1）, gap? }
+// apply は { lines, apply?(s), money?: ops[] } を返す（money は engine/money.js の applyMoneyOps）
 // 1年に画面に出る分かれ道は2件まで。答えのあとの乱数は (種, 'd', 年齢, 何番目, 答え) で作り直す。
 import { createRng, deriveSeed, pickWeighted } from './rng.js';
 import { rolesOf } from './year.js';
+import { applyMoneyOps } from './money.js';
 
 const MAX_PER_YEAR = 2;
 
@@ -47,9 +49,8 @@ export function* askDecision(d, s, ctx) {
   const view = { id: d.id, age: s.age, year: ctx.year, birthYear: s.birthYear, title: built.title, body: built.body, choices: built.choices };
   if (built.fact) view.fact = built.fact;
   if (built.kind) view.kind = built.kind;
-  // 画面のため：その年の中の時刻（この時刻に分かれ道の板を出す）と、振り返りの記入欄の印
+  // 画面のため：その年の中の時刻（この時刻に分かれ道の板を出す）
   view.t = ctx.t;
-  if (built.input) view.input = true;
   const valid = k => built.choices.some(c => c.k === k);
   const asked = ctx.ask.decisions;
   let k, shown = false, remembered = false;
@@ -73,6 +74,8 @@ export function* askDecision(d, s, ctx) {
   const usedBefore = new Set(s.usedTexts);
   const res = d.apply(k, s, { ...ctx, rng }) ?? { lines: [] };
   res.apply?.(s);
+  // お金の動き（データの側は ops を返すだけ）
+  if (res.money) applyMoneyOps(s, res.money, ctx.data);
   s.decisionCounts.set(d.id, (s.decisionCounts.get(d.id) ?? 0) + 1);
   s.lastSeen.set(`d:${d.id}`, s.age);
   if (d.remember) s.remembered.set(d.id, k);
@@ -80,9 +83,8 @@ export function* askDecision(d, s, ctx) {
   const head = remembered
     ? { kind: 're', text: `（${built.title}：前と同じく「${label}」）` }
     : { kind: 'dec', text: `${built.title}：「${label}」` };
-  // 同じ分かれ道で前と同じ結果になったときは、言い回しを変える（「今回も、」）。ひと息の行はそのまま
+  // 同じ分かれ道で前と同じ結果になったときは、言い回しを変える（「今回も、」）
   const fresh = l => {
-    if (l.kind === 'reflect') return l;
     for (const t of [l.text, `今回も、${l.text}`, `このときも、${l.text}`]) if (!usedBefore.has(t)) { usedBefore.add(t); s.usedTexts.add(t); return { ...l, text: t }; }
     return l;
   };

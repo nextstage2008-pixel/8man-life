@@ -1,4 +1,5 @@
-// 税理士になってから・暮らしの分かれ道（20種類）。出やすさは低め（1人生の分かれ道を15〜20回に保つ）。
+// 税理士になってから・暮らしの分かれ道（20種類）。出やすさは低め。お金の動きは money（engine/money.js の ops）。
+import { MONEY } from '../money.js';
 const D = (id, o) => ({ maxPerLife: 1, ...o, id });
 const choice = (k, label, sub) => (sub ? { k, label, sub } : { k, label });
 const bump = (st, k, n) => { st.stats[k] = Math.max(0, Math.min(100, st.stats[k] + n)); };
@@ -51,17 +52,22 @@ export const MORE_DECISIONS = [
     apply: k => ({ lines: [{ text: k === 'no' ? '今の仕事を深めることにしました。' : `${{ souzoku: '相続', iryo: '医療', kokusai: '国際の税' }[k]}の勉強会に通い始めました。` }], apply: st => { if (k !== 'no') { st.career.specialty = k; const a = (st.career.paths = st.career.paths ?? []); if (!a.includes('specialty')) a.push('specialty'); } } }) }),
   // 暮らし
   D('ie-d', { ages: [30, 50], when: p(0.03), needs: s => married(s) && !s.flags.has('ie'),
-    build: () => ({ title: '家を買いますか', body: '家族が増え、今の部屋が手狭になってきました。', choices: [choice('buy', '家を買う', 'ローンを組む'), choice('rent', '借りたまま住む')] }),
+    build: () => ({ title: '家を買いますか', body: '家族が増え、今の部屋が手狭になってきました。', choices: [choice('buy', '家を買う', `頭金${MONEY.housing.value.down}万円ほど。毎年${MONEY.housing.value.perYear}万円ほどを${MONEY.housing.value.years}年返す`), choice('rent', '借りたまま住む')] }),
     auto: { buy: 55, rent: 45 },
-    apply: k => ({ lines: [{ text: k === 'buy' ? '家を買いました。ローンの表を自分で作りました。' : '家は借りたままにすることにしました。' }], apply: st => { if (k === 'buy') st.flags.add('ie'); } }) }),
+    apply: k => ({ lines: [{ text: k === 'buy' ? '家を買いました。ローンの表を自分で作りました。' : '家は借りたままにすることにしました。' }], apply: st => { if (k === 'buy') st.flags.add('ie'); }, money: k === 'buy' ? [{ op: 'house' }] : [] }) }),
   D('doukyo-d', { ages: [35, 75], when: p(0.01), needs: parentOld(78),
     build: () => ({ title: '親と暮らしますか', body: '年を取った親が、一人で暮らしています。', choices: [choice('yes', '一緒に暮らす'), choice('no', '近くに住んで通う')] }),
     auto: { yes: 30, no: 70 },
     apply: k => ({ lines: [{ text: k === 'yes' ? '親を家に迎え、一緒に暮らし始めました。' : '週末ごとに、親の家に通うことにしました。' }], apply: st => bump(st, 'so', k === 'yes' ? 3 : 1) }) }),
   D('kaigo-d', { ages: [40, 80], when: p(0.02), needs: parentOld(83),
-    build: () => ({ title: '親の介護', body: '親が一人で暮らすのが難しくなってきました。', choices: [choice('shisetsu', '施設に入ってもらう'), choice('zaitaku', '家で介護する', '仕事との両立が大変')] }),
+    build: () => ({ title: '親の介護', body: '親が一人で暮らすのが難しくなってきました。', choices: [choice('shisetsu', '施設に入ってもらう', `月に${MONEY.care.value.perMonth}万円ほど`), choice('zaitaku', '家で介護する', '仕事との両立が大変')] }),
     auto: { shisetsu: 55, zaitaku: 45 },
-    apply: k => ({ lines: [{ text: k === 'shisetsu' ? '親に施設に入ってもらいました。週に一度、顔を見に行きました。' : '家で親の介護を始めました。仕事を早めに切り上げる日が増えました。' }], apply: st => { if (k === 'zaitaku') { bump(st, 'hl', -3); bump(st, 'so', 2); } } }) }),
+    apply: k => {
+      const C = MONEY.care.value;
+      const perYear = C.perMonth * 12 * (k === 'zaitaku' ? MONEY.turning.value.kaigoZaitaku : 1);
+      return { lines: [{ text: k === 'shisetsu' ? '親に施設に入ってもらいました。週に一度、顔を見に行きました。' : '家で親の介護を始めました。仕事を早めに切り上げる日が増えました。' }], apply: st => { if (k === 'zaitaku') { bump(st, 'hl', -3); bump(st, 'so', 2); } },
+        money: [{ op: 'spend', amount: C.first, reason: 'kaigo' }, { op: 'care', perYear, years: Math.round(C.months / 12) }] };
+    } }),
   D('shinro-ko', { ages: [40, 70], when: p(0.15), needs: s => s.children.some(c => s.age - c.bornAge === 17),
     build: s => ({ title: '子どもの進路', body: `${s.children.find(c => s.age - c.bornAge === 17).name}が、進路に迷っています。`, choices: [choice('ouen', '本人に任せて応援する'), choice('iken', '自分の考えを伝える')] }),
     auto: { ouen: 60, iken: 40 },

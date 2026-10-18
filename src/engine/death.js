@@ -5,6 +5,7 @@ import { pickWeighted } from './rng.js';
 import { textAllowed } from './text.js';
 import { isRegistered, causeFor } from './year.js';
 import { qFor } from './family.js';
+import { debtFactor, settleAtDeath } from './money.js';
 import { FAMILY_TEXTS as T, SUPPORT_LINES } from '../data/events/family.js';
 
 export const DEATH_OR = {
@@ -46,7 +47,9 @@ function die(s, ctx, cause) {
   s.alive = false;
   s.deathAge = s.age;
   s.deathCause = cause;
-  return finalLines(s, ctx, cause).map(l => ({ age: s.age, year: ctx.year, t: 0.97, ...l }));
+  const lines = finalLines(s, ctx, cause);
+  lines.splice(1, 0, ...settleAtDeath(s, ctx.data));
+  return lines.map(l => ({ age: s.age, year: ctx.year, t: 0.97, ...l }));
 }
 
 export function deathStep(s, ctx) {
@@ -59,6 +62,8 @@ export function deathStep(s, ctx) {
     const r = rng();
     let m = DEATH_OR.mental[s.mental?.k ?? 'none'] * DEATH_OR.suicideNorm;
     if (s.widowedAt != null && s.age - s.widowedAt <= 2) m *= DEATH_OR.widowed;
+    // 暮らしの借金が大きいとき（開業資金・家のローンは入れない。money.js）
+    m *= debtFactor(s, data);
     if (!s.suppressSuicide && r < suicideBase(s, data) * m) return die(s, ctx, 'suicide');
   }
   // 自殺以外

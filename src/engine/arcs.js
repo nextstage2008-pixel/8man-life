@@ -3,6 +3,7 @@
 import { randInt } from './rng.js';
 import { renderText } from './text.js';
 import { ARCS } from '../data/events/arcs.js';
+import { applyMoneyOps } from './money.js';
 
 const MAX_ACTIVE = 2;
 
@@ -15,6 +16,7 @@ function runStep(s, ctx, def, rec) {
   const text = cands[Math.floor(ctx.rng() * cands.length)];
   s.usedTexts.add(text);
   step.apply?.(s, ctx);
+  if (step.cost) applyMoneyOps(s, [{ op: 'spend', amount: ctx.data.MONEY.shocks.value[step.cost], reason: step.cost }], ctx.data);
   rec.steps.push({ step: rec.step, age: s.age });
   const line = { kind: 'ev', text, ev: `arc:${def.id}` };
   if (Array.isArray(step.next)) rec.nextAge = s.age + randInt(ctx.rng, step.next[0], step.next[1]);

@@ -5,6 +5,7 @@
 import { renderText } from './text.js';
 import { rolesOf } from './year.js';
 import { clamp } from './odds.js';
+import { applyMoneyOps } from './money.js';
 
 export function applyFx(s, fx) {
   if (!fx) return;
@@ -66,6 +67,9 @@ export function fireEvent(ev, s, ctx) {
       if (ev.fxFlag) st.flags.add(ev.fxFlag);
       if (ev.fxHabit) Object.assign(st.habits, ev.fxHabit);
       if (ev.rare) st.rareCount = (st.rareCount ?? 0) + 1;
+      // お金の出ていく出来事（cost は MONEY.shocks の名前）
+      if (ev.cost) applyMoneyOps(st, [{ op: 'spend', amount: ctx.data.MONEY.shocks.value[ev.cost], reason: ev.cost }], ctx.data);
+      if (ev.money) applyMoneyOps(st, ev.money, ctx.data);
     } } : null;
   }
   if (!res || !res.lines?.length) return [];

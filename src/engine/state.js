@@ -9,7 +9,10 @@ export function createState() {
     // 健康・幸福・知識・人間関係（0〜100）
     stats: { hl: 85, h: 60, sm: 50, so: 60 },
     talent: 0, aptitude: 0,
-    money: { savings: 0, income: 0 },
+    // 学校のころ（engine/school.js）：私立か・中高一貫か・部活・アルバイト・奨学金・大学の私立か国立か・受験の話が来たか
+    school: { sho: 'public', chu: 'public', ko: 'public', ikkan: false, bukatsu: false, baito: null, shogakukin: false, univ: null, offers: {}, paid: {} },
+    // お金（万円）。家＝親の家のお金。loans：{ kind, left, perYear }（engine/money.js）
+    money: { income: 0, savings: 0, house: { income: 0, savings: 0 }, loans: [], pension: 0, effort: 'hodohodo', paid: [], pending: [], shocks: [], care: null, companyFactor: 1, incomeFactor: null, maxIncome: 0, maxIncomeAge: null, debtFreeAge: null, everBorrowed: false },
     habits: { smoke: false, drink: false, exercise: false },
     illnesses: [],
     mental: null,

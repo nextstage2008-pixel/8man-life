@@ -17,6 +17,15 @@ export const ESTIMATE_LABELS = {
   'LIFE.heisei.e0': '平成生まれの平均寿命（将来推計の長期の値をあてています）',
   'LIFE.heisei.suicideRateByAgeSex': '自殺の死亡率のうち、公表の表に出ない高い年齢の帯',
   'LIFE.heisei.neverMarriedAt50': '50歳で結婚したことがない人の割合（平成生まれ）',
+  'MONEY.householdSavingsStart': '生まれたときの家の貯蓄（家の暮らし向きの5段階ごと）',
+  'MONEY.taxOfficePay': '税務署の年収の初任・1年あたりの伸び・上限',
+  'MONEY.styleFactor': '社員税理士・企業内税理士の年収が勤務の税理士の何倍か',
+  'MONEY.spouseIncome': '配偶者の年収（勤め・パート）',
+  'MONEY.effort': '頑張り具合ごとの、昇給・使うお金・健康・幸福の変わり方',
+  'MONEY.shocks': '出来事で急に減るお金（病気・離婚・顧問先の倒産・災害）',
+  'MONEY.school': '受験の話が来やすさ・受かる割合・中高一貫の割合・大学が私立の割合・高校生のアルバイト・商業科に進む割合',
+  'MONEY.turning': '就職先ごとの年収の倍率・育休と時短の年収・事務所の譲り受けと譲る代金・家で介護する費用・付き合った人と別れる割合',
+  'MONEY.household': '家が貯める割合・親の家で働く人が家に入れる分・大学に行く子の費用・暮らしの借金を返す年数',
 };
 
 // 値の書き方（割合は百分率にするので、ここには割合でない値だけ）

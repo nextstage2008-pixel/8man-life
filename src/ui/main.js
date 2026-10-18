@@ -9,11 +9,11 @@ import { resultModel } from './core/result.js';
 import { statusOf } from './core/status.js';
 import { hasDanger, markSuppressed, isSuppressed, suppressFromAfter } from './core/safety.js';
 import { decodeReplay, postText, xIntentUrl, shareLink } from './core/share.js';
-import { saveProgress, loadProgress, clearProgress, shouldClearProgress } from './core/save.js';
+import { saveProgress, loadProgress, clearProgress, shouldClearProgress, staleProgress } from './core/save.js';
 import { startView } from './views/start.js';
 import { pickLitPref } from './views/japan-map.js';
 import { birthView } from './views/birth.js';
-import { lifeBar, statsBlock, sceneBlock, yearCard, lineHtml, controlsView } from './views/life.js';
+import { lifeBar, statsBlock, sceneBlock, yearCard, lineHtml, controlsView, moneyRow } from './views/life.js';
 import { sceneOf, sceneLayout } from './core/scene.js';
 import { drawScene } from './scene-canvas.js';
 import { emptyLog, addToLog } from './core/log-order.js';
@@ -75,6 +75,8 @@ function startMapLights() {
 function showStart(notice = null) {
   stop();
   S.screen = 'start';
+  // 前の版の「続きから」は使えないので、消したことを一度だけ知らせる
+  if (staleProgress(store, VERSION)) { clearProgress(store); notice = notice ?? '版が新しくなったため、前の「続きから」は使えなくなりました。新しく生まれてみてください。'; }
   const p = loadProgress(store, VERSION);
   app.innerHTML = startView({ birthMode: S.birthMode, resumable: p ? { label: p.label } : null, notice });
   window.scrollTo(0, 0);
@@ -108,6 +110,8 @@ function beginLife() {
   S.log = emptyLog();
   S.sceneState = null;
   S.sceneSig = '';
+  S.money = null;
+  S.moneySig = '';
   app.innerHTML = '<div class="screen life"><div id="bar"></div><div id="scene"></div><div id="stats"></div><section id="log" class="log" aria-live="polite"></section></div><div class="controls-wrap" id="controls"></div><div class="sheet-wrap" id="sheet" hidden></div>';
   renderControls();
   updateProfile(0, S.card.birthYear);
@@ -127,10 +131,11 @@ function handle(events) {
   if (!events.length) return;
   for (const e of events) {
     if (e.type === 'line') addLine(e.line);
-    else if (e.type === 'decision') { drawLatestScene(); showDecision(e.view); }
+    else if (e.type === 'decision') { drawLatestScene(); drawLatestMoney(); showDecision(e.view); }
     else if (e.type === 'end') { showEnd(); return; }
   }
   drawLatestScene();
+  drawLatestMoney();
 }
 
 // 新しい年のカードはいちばん上に作り、行はそのカードの見出しのすぐ下（＝いちばん上）に足す（core/log-order.js の決まり）
@@ -138,6 +143,7 @@ function addLine(line) {
   const r = addToLog(S.log, line);
   S.log = r.log;
   if (line.scene) S.sceneState = line.scene;
+  if (line.money) S.money = line.money;
   let el = S.years.get(line.age);
   if (r.op.newCard || !el) {
     document.querySelector('.year-card.current')?.classList.remove('current');
@@ -150,6 +156,17 @@ function addLine(line) {
   }
   const html = lineHtml(line);
   if (html) el.querySelector('.year-head').insertAdjacentHTML('afterend', html);
+}
+
+// 年収・貯蓄・借入金：いちばん新しい行の money で、変わったときだけ書き直す
+function drawLatestMoney() {
+  const card = document.querySelector('#stats .stats-card');
+  if (!card || !S.money) return;
+  const sig = JSON.stringify(S.money);
+  if (sig === S.moneySig && card.querySelector('.money')) return;
+  S.moneySig = sig;
+  const old = card.querySelector('.money');
+  if (old) old.outerHTML = moneyRow(S.money); else card.insertAdjacentHTML('beforeend', moneyRow(S.money));
 }
 
 // 場面の絵：いちばん新しい行の状態で、変わったときだけ描き直す
@@ -172,7 +189,8 @@ function updateProfile(age, year) {
   const last = S.player?.trace.at(-1);
   const st = statusOf(last ?? { age, career: {} }, 'exam', DATA);
   document.getElementById('bar').innerHTML = lifeBar({ card: S.card, age, year, roleLabel: st.roleLabel });
-  document.getElementById('stats').innerHTML = statsBlock({ subjects: st.subjects, stats: last?.stats ?? S.card.stats });
+  document.getElementById('stats').innerHTML = statsBlock({ subjects: st.subjects, stats: last?.stats ?? S.card.stats, money: S.money ?? null });
+  S.moneySig = JSON.stringify(S.money ?? null);
 }
 
 function renderControls() {
@@ -199,22 +217,10 @@ function closeSheet() {
   sheet.innerHTML = '';
 }
 
-// 答える。振り返りに危ない言葉があれば、相談先を出し、30日の判定止めと、この人生のこの年齢から先の判定止めを入れる
+// 答える
 function choose(k) {
   const view = S.player.currentDecision;
   if (!view) return;
-  const text = document.querySelector('[data-role="reflect"]')?.value ?? '';
-  if (view.kind === 'reflect' && hasDanger(text)) {
-    markSuppressed(store, Date.now());
-    S.config.suppressFrom = suppressFromAfter(S.config.suppressFrom, view.age);
-    S.supportNext = () => { closeSheet(); S.player.answer(k); };
-    document.getElementById('sheet').innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sup-title">
-  <h2 id="sup-title" class="sheet-title">話せる場所があります</h2>
-  ${SUPPORT_LINES.map(t => `<p class="support">${supportHtml(t)}</p>`).join('')}
-  <button class="btn-primary" type="button" data-action="support-ok">人生を続ける</button>
-</div>`;
-    return;
-  }
   closeSheet();
   S.player.answer(k);
 }

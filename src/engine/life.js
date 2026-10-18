@@ -8,6 +8,7 @@ import { fireEvent } from './events.js';
 import { buildWorld } from './world.js';
 import { DATA } from '../data/index.js';
 import { homeFxOf, applyHome, sceneState } from './scene-state.js';
+import { moneyView, moneySummary } from './money.js';
 
 // 出来事・分かれ道・仕組みの置き場（world.js でまとめる）
 export const WORLD = buildWorld();
@@ -40,6 +41,7 @@ export function summarize(s, decisions, data) {
     },
     paths: [...(c.paths ?? [])], specialty: c.specialty ?? null,
     arcs: (s.arcLog ?? []).map(r => ({ id: r.id, done: r.done, steps: r.steps.map(x => ({ ...x })) })),
+    money: moneySummary(s), univ: s.flags.has('will-univ'),
     kaigyoAt: c.kaigyoAt, retiredAt: c.retiredAt, workHistory: [...(c.workHistory ?? [])], successor: c.successor,
     deathAge: s.deathAge, deathCause: s.deathCause, decisions,
     peers: (s.peers ?? []).map(p => ({ surname: p.surname, name: p.name, sex: p.sex, outcomes: p.outcomes.map(o => ({ age: o.age, kind: o.kind })) })),
@@ -75,7 +77,7 @@ export function* runLife(config, data = DATA, world = WORLD) {
   const out = line => {
     const fx = homeFxOf(line.text);
     if (fx) applyHome(s, fx, line.age);
-    return { kind: 'line', line: { ...line, scene: sceneState(s, line.age) } };
+    return { kind: 'line', line: { ...line, scene: sceneState(s, line.age), money: moneyView(s, data) } };
   };
   for (const line of birthLines(s)) yield out(line);
   while (s.alive) {

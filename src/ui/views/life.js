@@ -4,6 +4,7 @@ import { esc } from '../core/escape.js';
 import { supportHtml } from './support.js';
 import { SITE } from '../site.js';
 import { serverEnabled } from '../core/net.js';
+import { formatMan } from '../core/money-format.js';
 
 const STATS = [['hl', '健康'], ['h', '幸福'], ['sm', '知識'], ['so', '人間関係']];
 const TAG = { big: ['大事なこと', 'tag-accent'], warm: ['うれしいこと', 'tag-soft'], loss: ['かなしいこと', 'tag-gray'], dec: ['分かれ道', 'tag-line'], peer: ['同期', 'tag-soft'] };
@@ -28,8 +29,19 @@ export function sceneBlock({ caption }) {
 </section>`;
 }
 
-// 合格した科目と4つの数値
-export function statsBlock({ subjects = [], stats = {} }) {
+// 年収・貯蓄・借入金（いちばん新しい行の money）。子どものうちは家の年収・家の貯蓄、引退後は年金
+export function moneyRow(money) {
+  if (!money) return '';
+  const debt = money.debt > 0 ? `${formatMan(money.debt)}${money.debtReason ? `<span class="money-sub">${esc(money.debtReason)}</span>` : ''}` : 'なし';
+  return `<div class="money">
+    <div class="money-item" data-role="income"><span class="money-label">${esc(money.incomeLabel)}</span><span class="money-num">${formatMan(money.income)}</span></div>
+    <div class="money-item" data-role="savings"><span class="money-label">${esc(money.savingsLabel)}</span><span class="money-num">${formatMan(money.savings)}</span></div>
+    <div class="money-item" data-role="debt"><span class="money-label">借入金</span><span class="money-num">${debt}</span></div>
+  </div>`;
+}
+
+// 合格した科目と4つの数値と、お金
+export function statsBlock({ subjects = [], stats = {}, money = null }) {
   const stat = ([k, label]) => {
     const v = Math.round(stats[k] ?? 0);
     return `<div class="stat"><span class="stat-label">${label}</span><span class="stat-num">${v}</span><div class="bar"><div class="bar-fill" style="width: ${v}%"></div></div></div>`;
@@ -37,6 +49,7 @@ export function statsBlock({ subjects = [], stats = {} }) {
   return `<section class="card stats-card">
   ${subjects.length ? `<div class="chips">${subjects.map(s => `<span class="chip ${s.state === 'exempt' ? 'chip-exempt' : 'chip-pass'}">${esc(s.name)}${s.state === 'exempt' ? 'は免除' : ''}</span>`).join('')}</div>` : ''}
   <div class="stats">${STATS.map(stat).join('')}</div>
+  ${moneyRow(money)}
 </section>`;
 }
 

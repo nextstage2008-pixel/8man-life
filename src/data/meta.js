@@ -1,5 +1,5 @@
 // データと計算の版。再現リンクと共有ページに入れ、古い版のリンクを見分ける。
-export const DATA_VERSION = '0.1.0';
+export const DATA_VERSION = '0.2.0';
 
 // 出典の一覧。データの各値の src はここのキーを指す。
 // 'industry-survey' は業界の調査を丸めた値（先生の判断で出典名を書かない。公開する束の説明書きにも書かない）。
@@ -35,6 +35,17 @@ export const SOURCES = {
   'nta-ta-6102': { title: '国税庁 タックスアンサー No.6102 消費税の軽減税率制度', url: 'https://www.nta.go.jp/taxes/shiraberu/taxanswer/shohi/6102.htm', retrieved: '2026-10-17' },
   'nta-invoice': { title: '国税庁「インボイス制度について」', url: 'https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/invoice_about.htm', retrieved: '2026-10-17' },
   'nta-denchoho': { title: '国税庁「令和6年1月からの電子取引データの保存方法」', url: 'https://www.nta.go.jp/law/joho-zeikaishaku/sonota/jirei/tokusetsu/pdf/0023011-012.pdf', retrieved: '2026-10-17' },
+  'stat-kakei-chochiku-2024': { title: '総務省統計局「家計調査報告（貯蓄・負債編）2024年（令和6年）平均結果」', url: 'https://www.stat.go.jp/data/sav/sokuhou/nen/pdf/2024_gai.pdf', retrieved: '2026-10-18' },
+  'stat-kakei-2024': { title: '総務省統計局「家計調査報告（家計収支編）2024年（令和6年）平均結果の概要」', url: 'https://www.stat.go.jp/data/kakei/sokuhou/tsuki/pdf/fies_gaikyo2024.pdf', retrieved: '2026-10-18' },
+  'mhlw-jobtag-r7': { title: '厚生労働省 職業情報提供サイト（job tag）「税理士」「公認会計士」「弁護士」「経理事務」の統計データ（令和7年賃金構造基本統計調査を加工）／人事院「令和6年国家公務員給与等実態調査」／日本学生支援機構「学生生活調査（令和4年度）」', url: 'https://shigoto.mhlw.go.jp/User/Occupation/Detail/92', retrieved: '2026-10-18' },
+  'mext-gakushuhi-r5': { title: '文部科学省「子供の学習費調査」結果の訂正について（令和5年度・令和8年1月16日）／日本学生支援機構「学生生活調査（令和4年度）」', url: 'https://www.mext.go.jp/content/20260116-mxt_chousa01-000046779_01.pdf', retrieved: '2026-10-18' },
+  'mext-gakko-kihon-r6': { title: '文部科学省「学校基本調査（令和6年度）」都道府県別の在学者数（小学校・中学校・高等学校）', url: 'https://www.e-stat.go.jp/stat-search/files?toukei=00400001&tstat=000001011528', retrieved: '2026-10-18' },
+  'jasso-gakusei-r4': { title: '日本学生支援機構「令和4年度 学生生活調査」', url: 'https://www.jasso.go.jp/statistics/gakusei_chosa/2022.html', retrieved: '2026-10-18' },
+  'jili-flat35-2024': { title: '生命保険文化センター（住宅金融支援機構「2024年度 フラット35利用者調査」から）', url: 'https://www.jili.or.jp/lifeplan/lifeevent/house/3.html', retrieved: '2026-10-18' },
+  'jfc-kaigyo-2024': { title: '日本政策金融公庫 総合研究所「2024年度新規開業実態調査」', url: 'https://www.jfc.go.jp/n/findings/pdf/kaigyo_241127_1.pdf', retrieved: '2026-10-18' },
+  'jili-zenkoku-2024': { title: '生命保険文化センター「2024年度 生命保険に関する全国実態調査」（介護費用）', url: 'https://www.jili.or.jp/lifeplan/lifesecurity/1116.html', retrieved: '2026-10-18' },
+  'mhlw-nenkin-r6': { title: '厚生労働省「令和6年度 厚生年金保険・国民年金事業の概況」', url: 'https://www.mhlw.go.jp/content/001617995.pdf', retrieved: '2026-10-18' },
+  'mhlw-shuro-r5': { title: '厚生労働省「令和5年就労条件総合調査の概況」（退職給付）', url: 'https://www.mhlw.go.jp/toukei/itiran/roudou/jikan/syurou/23/dl/gaikyou.pdf', retrieved: '2026-10-18' },
   'imagined': { title: '想像の出来事（実際の出来事ではありません）', url: '', retrieved: '2026-10-17' },
   'agora-kanpou': { title: 'アゴラ「税理士試験 官報合格までの平均年数（開示請求のデータ）」（公式ではない）', url: 'https://agora-web.jp/?p=267573', retrieved: '2026-10-17' },
   'nta-gakui-menjo': { title: '国税庁「改正税理士法の『学位による試験科目免除』制度のQ＆A」', url: 'https://www.nta.go.jp/taxes/zeirishi/zeirishishiken/kaisei-qa/menu.htm', retrieved: '2026-10-17' },

@@ -1,8 +1,7 @@
-// 分かれ道の板（下から出る・C カード）。振り返りのときだけ記入欄を出す（書いた文はこの端末の中だけ）。
+// 分かれ道の板（下から出る・C カード）。
 import { esc } from '../core/escape.js';
 
 export function decisionSheet(view) {
-  const reflect = view.kind === 'reflect';
   const fact = view.fact ? (typeof view.fact === 'string' ? view.fact : view.fact.text) : null;
   const choice = c => {
     const sub = c.sub ?? c.hint;
@@ -10,13 +9,12 @@ export function decisionSheet(view) {
   };
   return `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
   <div class="sheet-handle" aria-hidden="true"></div>
-  <div class="sheet-meta"><span class="tag tag-solid">${reflect ? 'ひと息' : '分かれ道'}</span><span>${esc(view.age)}歳 · ${esc(view.year)}年</span></div>
+  <div class="sheet-meta"><span class="tag tag-solid">分かれ道</span><span>${esc(view.age)}歳 · ${esc(view.year)}年</span></div>
   <h2 id="sheet-title" class="sheet-title">${esc(view.title)}</h2>
   <p class="sheet-body">${esc(view.body)}</p>
   ${fact ? `<p class="sheet-fact">${esc(fact)}</p>` : ''}
-  ${view.input ? `<label class="sheet-label" for="reflect-text">書き留めておきたいこと（この端末の中だけです。投稿や札には入りません）</label><textarea id="reflect-text" class="textarea" data-role="reflect" rows="3"></textarea>` : ''}
   <div class="choices">${view.choices.map(choice).join('')}</div>
-  ${reflect ? '' : `<button class="btn-soft" type="button" data-action="auto">おまかせで選ぶ</button>
-  <p class="sheet-note">おまかせは、多くの人が選びそうな割合（推定）で選びます</p>`}
+  <button class="btn-soft" type="button" data-action="auto">おまかせで選ぶ</button>
+  <p class="sheet-note">おまかせは、多くの人が選びそうな割合（推定）で選びます</p>
 </div>`;
 }

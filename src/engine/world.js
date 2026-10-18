@@ -11,13 +11,15 @@ import { LIFE_SYSTEM } from './family.js';
 import { deathStep } from './death.js';
 import { PEER_SYSTEM } from './peers.js';
 import { ARC_SYSTEM } from './arcs.js';
+import { SCHOOL_SYSTEM } from './school.js';
+import { TURNING_SYSTEM } from './turning.js';
 
 
 export function buildWorld() {
   return {
     events: [...ALL_EVENTS],
     decisions: [MURI, ...PRE_DECISIONS, ...MORE_DECISIONS],
-    systems: [EXAM_SYSTEM, TAX_OFFICE_SYSTEM, CPA_SYSTEM, LAWYER_SYSTEM, CAREER_SYSTEM, LIFE_SYSTEM, PEER_SYSTEM, ARC_SYSTEM],
+    systems: [SCHOOL_SYSTEM, TURNING_SYSTEM, EXAM_SYSTEM, TAX_OFFICE_SYSTEM, CPA_SYSTEM, LAWYER_SYSTEM, CAREER_SYSTEM, LIFE_SYSTEM, PEER_SYSTEM, ARC_SYSTEM],
     death: deathStep,
     askDecision,
     pickDecisions,

@@ -4,6 +4,7 @@ import { supportHtml } from './support.js';
 import { pageLinks } from './start.js';
 import { authorLink } from './author.js';
 import { SITE } from '../site.js';
+import { formatMan } from '../core/money-format.js';
 
 const LEGEND = [['hl', '健康', '#2C5AA0', ''], ['h', '幸福', '#B5521A', ''], ['sm', '知識', '#1D2733', '4 3'], ['so', '人間関係', '#7A8CA3', '']];
 
@@ -23,6 +24,18 @@ export function firstNum(m) {
   if (m.route === 'tax-office') return [`${m.taxOfficeYears}年`, '税務署に勤めて'];
   if (m.route === 'cpa') return ['会計士', '公認会計士から'];
   return ['弁護士', '弁護士から'];
+}
+
+// お金のまとめ：いちばん多かった年収・最期の貯蓄・借入金を返し終えた年（または残った額・借りなかった）
+function moneySection(money) {
+  if (!money) return '';
+  const dansin = money.dansin > 0 ? `家のローンの残り${formatMan(money.dansin)}は、団体信用生命保険で返されました` : '';
+  const debt = money.debtAtDeath > 0 ? `${formatMan(money.debtAtDeath)}の借入が残りました${dansin ? `（${dansin}）` : ''}` : dansin || (money.debtFreeAge != null ? `${money.debtFreeAge}歳で借入金を返し終えました` : money.everBorrowed ? '借入金は返し終えました' : '借入はありませんでした');
+  return `<section class="card"><h2 class="sec">お金</h2><dl class="money-sum">
+  <div><dt>いちばん多かった年収</dt><dd>${formatMan(money.maxIncome)}${money.maxIncomeAge != null ? `（${money.maxIncomeAge}歳）` : ''}</dd></div>
+  <div><dt>最期の貯蓄</dt><dd>${formatMan(money.finalSavings)}</dd></div>
+  <div><dt>借入金</dt><dd>${esc(debt)}</dd></div>
+</dl></section>`;
 }
 
 export function endView(m, { supportLines = [] } = {}) {
@@ -54,6 +67,7 @@ export function endView(m, { supportLines = [] } = {}) {
   </div>
   <section class="card"><h2 class="sec">まれさ</h2><p>${esc(m.rarity.text)}</p>${share}</section>
   <section class="card" data-role="minna" hidden></section>
+  ${moneySection(m.money)}
   <section class="card"><h2 class="sec">一生の数値</h2>${statsSvg(m.stats)}<p class="legend">${LEGEND.map(([, label, color]) => `<span class="legend-item"><span class="legend-mark" style="background: ${color}"></span>${label}</span>`).join('')}</p></section>
   <section class="card"><h2 class="sec">大事な瞬間</h2><ol class="timeline">${m.timeline.map(t => `<li><span class="tl-age">${esc(t.age)}歳</span><span>${esc(t.text)}</span></li>`).join('')}</ol></section>
   <section class="card"><h2 class="sec">同期4人のその後</h2><ul class="peers">${m.peers.map(p => `<li><span class="peer-name">${esc(p.name)}</span><span>${esc(p.text)}</span></li>`).join('')}</ul></section>

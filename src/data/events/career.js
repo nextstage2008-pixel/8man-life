@@ -14,7 +14,7 @@ export const CAREER_EVENTS = [
   { id: 'shacho-shokei', ages: [40, 90], roles: ['owner', 'partner'], gap: 4, p: () => 0.12, kind: 'ev',
     texts: ['顧問先の社長から、息子に会社を継がせたいと相談されました。', '顧問先の社長が引退し、娘さんが後を継ぎました。挨拶に来た新しい社長と、長い時間話しました。', '後継ぎのいない顧問先の社長と、会社を譲る先を一緒に考えました。'] },
   { id: 'tousan', ages: [30, 90], roles: ['owner'], gap: 6, p: (s, ctx) => (ctx.year === 2008 || ctx.year === 2009 || ctx.year === 2020 ? 0.3 : 0.05), kind: 'loss',
-    needs: s => s.career.clients > 3, fxClients: -1,
+    needs: s => s.career.clients > 3, fxClients: -1, cost: 'tousan',
     texts: ['顧問先の会社が倒産しました。最後の決算書を作ったのは自分でした。', '長く付き合った顧問先が、資金繰りに行き詰まって店を閉めました。'] },
   { id: 'kakutei-isogashii', ages: [24, 80], roles: REG, gap: 3, p: () => 0.2, kind: 'ev',
     texts: ['確定申告の時期、事務所の電気が夜遅くまで消えませんでした。', '3月15日の夜、最後の申告を出し終えて、事務所の床に座り込みました。', '確定申告の時期、休みのない日が続きました。'] },

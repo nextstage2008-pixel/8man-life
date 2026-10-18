@@ -8,7 +8,5 @@ export const CAREER = {
   // 開業したときの顧問先の数（推定）。OB は紹介などで少し多めに始まる
   clientsStart: { value: { from: 2, to: 8 }, estimated: true },
   clientsStartOB: { value: { from: 6, to: 15 }, estimated: true },
-  // 開業の年収（万円）＝基本＋顧問先1件あたり（推定。開業の平均所得の丸めた値から逆算）
-  incomeBase: { value: 150, estimated: true },
-  incomePerClient: { value: 16, estimated: true },
+  // 年収は data/money.js（MONEY）にまとめた
 };

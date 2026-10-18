@@ -76,27 +76,3 @@ export const MENTAL_AGAIN = {
   apply: (k) => ({ lines: [{ text: k === 'alone' ? 'まだ誰にも言えませんでした。' : '少しだけ、話してみることにしました。' }], apply: st => { st.mental = { k, since: st.mental?.since ?? st.age }; } }),
 };
 
-// 振り返りの問い（節目で一息つく）。書いた文は画面が持ち、計算には入れない
-const REFLECT_Q = {
-  aspire: ['税理士を目指すと決めた今の気持ちを、書き留めておきますか。', '何がきっかけで、この道を選びましたか。'],
-  start: ['はじめての一歩を踏み出しました。いま、何を思っていますか。', '最初の年を終えました。思っていたのと何が違いましたか。'],
-  shikaku: ['税理士になる資格がそろいました。ここまでの道のりを、どう振り返りますか。', 'くじけそうになったとき、支えてくれたものは何でしたか。'],
-  kaigyo: ['自分の事務所を開きました。どんな事務所にしたいですか。', '最初の顧問先に、何を約束しますか。'],
-  retire: ['仕事を終えました。いちばん心に残っている仕事は何ですか。', 'これから税理士を目指す人に、何を伝えたいですか。'],
-};
-
-export const REFLECT = {
-  id: 'reflect', maxPerLife: 5, when: () => true,
-  build: s => ({
-    kind: 'reflect',
-    title: 'ひと息',
-    body: (REFLECT_Q[s._reflect] ?? REFLECT_Q.aspire)[(s.age + (s.seed ?? 0)) % 2],
-    input: true,
-    choices: [
-      { k: 'write', label: '書き留めて、人生を続ける' },
-      { k: 'keep', label: '胸にしまって、人生を続ける' },
-    ],
-  }),
-  auto: { write: 30, keep: 70 },
-  apply: () => ({ lines: [{ kind: 'reflect', text: '（ひと息ついて、ここまでを振り返りました。）' }] }),
-};

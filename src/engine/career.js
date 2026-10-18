@@ -4,6 +4,7 @@ import { randInt, normal } from './rng.js';
 import { clamp } from './odds.js';
 import { CAREER } from '../data/career.js';
 import { KAIGYO, SHAIN, HIRE, OWNER_RETIRE, EMP_RETIRE, TSUGU, DAIHYO, TO_KIGYO, HOJINKA, YUZURIUKE, MODORU, addPath } from '../data/decisions/career.js';
+import { applyMoneyOps, retirementLump } from './money.js';
 
 const ln = (text, kind = 'ev') => ({ kind, text });
 const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
@@ -13,6 +14,12 @@ const KAIGYO_TEXTS = [
   '小さな部屋を借りて、自分の事務所を開きました。最初の電話が鳴るまで、三日かかりました。',
   '自宅の一室で事務所を始めました。机とパソコンと、税法の本棚だけです。',
 ];
+// 開業資金の答えに合わせた開業の文（答えがなければ上の3つから）
+const KAIGYO_TEXTS_BY_FUND = {
+  none: ['自宅の一室で事務所を始めました。机とパソコンと、税法の本棚だけです。', '自宅の一室で事務所を始めました。表札の横に、小さな看板を足しました。'],
+  small: KAIGYO_TEXTS.slice(0, 2),
+  large: ['駅の近くの部屋に、自分の事務所を開きました。職員と二人で、最初の顧問先を回りました。', '駅の近くに事務所を開きました。職員の机が並ぶと、急に事務所らしくなりました。'],
+};
 const RETIRE_TEXTS = {
   yuzuru: ['事務所を後輩の税理士に譲り、引退しました。最後の日、顧問先の名簿を一緒にめくりました。', '事務所を若い税理士に引き継ぎ、引退しました。'],
   haigyo: ['事務所を閉じ、引退しました。顧問先には、信頼できる事務所を一件ずつ紹介しました。', '看板を下ろし、事務所を閉じました。'],
@@ -25,21 +32,34 @@ function startKaigyo(s, ctx) {
   c.firm = 'own';
   c.kaigyoAt = s.age;
   const r = s.route === 'tax-office' ? CAREER.clientsStartOB.value : CAREER.clientsStart.value;
-  c.clients = randInt(ctx.rng, r.from, r.to);
+  c.clients = randInt(ctx.rng, r.from, r.to) + (c.kaigyoFund === 'large' ? 3 : 0);
   c.clientsInit = true;
   c.workplaces.push('自分の事務所');
   addPath(s, 'kaigyo');
-  return [ln(pick(ctx.rng, KAIGYO_TEXTS), 'big')];
+  return [ln(pick(ctx.rng, KAIGYO_TEXTS_BY_FUND[c.kaigyoFund] ?? KAIGYO_TEXTS), 'big')];
 }
+
+const man = n => `${Math.round(n).toLocaleString('ja-JP')}万円`;
 
 function retire(s, ctx, kind) {
   const c = s.career;
+  const M = ctx.data.MONEY;
+  // 退職金（勤め・社員）と、事務所を譲った代金（開業）
+  // 勤めの退職金は、前に退職金をもらってからの勤めの年数で按分する（税務署を出た人の二度目は小さい）
+  const m = s.money;
+  const lump = kind === 'emp' ? retirementLump(s, M, (m.empYears ?? 0) - (m.empYearsAtLump ?? 0)) : kind === 'yuzuru' ? c.clients * M.turning.value.yuzuruPerClient : 0;
+  if (kind === 'emp') m.empYearsAtLump = m.empYears ?? 0;
   c.phase = 'retired';
   c.retiredAt = s.age;
   if (kind === 'yuzuru') { c.successor = 'yuzuru'; addPath(s, 'yuzuru'); }
   if (kind === 'haigyo') { c.successor = 'haigyo'; addPath(s, 'haigyo'); }
   c.clients = 0;
-  return [ln(pick(ctx.rng, RETIRE_TEXTS[kind]), 'big')];
+  const out = [ln(pick(ctx.rng, RETIRE_TEXTS[kind]), 'big')];
+  if (lump > 0) {
+    applyMoneyOps(s, [{ op: 'earn', amount: lump }], ctx.data);
+    out.push(ln(kind === 'emp' ? `退職金は${man(lump)}でした。` : `事務所を譲った代金は${man(lump)}でした。`));
+  }
+  return out;
 }
 
 export const CAREER_SYSTEM = {
@@ -50,7 +70,8 @@ export const CAREER_SYSTEM = {
     const items = [];
     const years = s.age - c.registeredAt;
     // 独立の分かれ道：登録の3年後・10年後・50歳（所属・企業内のまま65歳まで）
-    if ((c.workStyle === 'shozoku' || c.workStyle === 'kigyonai') && s.age <= 64 && !c.kaigyoPlan
+    // 開業は決めた翌年なので、64歳（65歳で引退を聞く前）までに開けるよう63歳まで
+    if ((c.workStyle === 'shozoku' || c.workStyle === 'kigyonai') && s.age <= 63 && !c.kaigyoPlan
       && (years === 3 || years === 10 || (s.age === 50 && years > 3))) items.push({ t: monthT(6), type: 'decision', ref: KAIGYO });
     // 税理士法人で6年たったら、社員の話
     if (c.workStyle === 'shozoku' && c.firm === 'hojin' && years === 6) items.push({ t: monthT(4), type: 'decision', ref: SHAIN });
@@ -75,7 +96,8 @@ export const CAREER_SYSTEM = {
     const c = s.career;
     const out = [];
     if (c.phase === 'registered') {
-      if (c.kaigyoPlan && c.workStyle !== 'kaigyo' && c.workStyle !== 'shain') out.push(...startKaigyo(s, ctx));
+      // 独立を決めた翌年の終わりに開業する（その年の初めに開業資金を聞く）
+      if (c.kaigyoPlan && c.workStyle !== 'kaigyo' && c.workStyle !== 'shain' && s.age > (c.kaigyoPlanAt ?? -1)) out.push(...startKaigyo(s, ctx));
       if (c.tsuguPlan && c.workStyle !== 'kaigyo') {
         // 所長の事務所を継ぐ：開業になり、顧問先と職員を引き継ぐ
         c.tsuguPlan = false;
@@ -98,16 +120,11 @@ export const CAREER_SYSTEM = {
         if (c.capClients != null) c.clients = Math.min(c.clients, c.capClients + 3);
         if (c.staff === 0) c.clients = Math.min(c.clients, 35);
         c.clientsMax = Math.max(c.clientsMax, c.clients);
-        s.money.income = CAREER.incomeBase.value + CAREER.incomePerClient.value * c.clients;
-      } else {
-        s.money.income = { shozoku: 600, kigyonai: 750, shain: 1000 }[c.workStyle] ?? 600;
       }
       c.reputation = clamp(c.reputation, 0, 100);
       s.flags.add('busy-year');
       if (c.retirePlan === 'yuzuru' || c.retirePlan === 'haigyo') out.push(...retire(s, ctx, c.retirePlan));
       else if (c.retirePlan === 'retire') out.push(...retire(s, ctx, 'emp'));
-    } else if (c.phase === 'retired') {
-      s.money.income = 180;
     }
     // 働き方の移り変わりを記録する（要約と検証に使う）
     const style = c.phase === 'retired' ? 'retired' : c.phase === 'registered' ? c.workStyle : null;

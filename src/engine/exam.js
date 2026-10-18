@@ -223,7 +223,6 @@ export const EXAM_SYSTEM = {
     }
     if (c.job === 'jimusho' || c.job === 'keiri') c.jitsumuYears += 1;
     if (c.job === 'jimusho') s.flags.add('busy-year');
-    s.money.income = { jimusho: 300, keiri: 380, senen: 60 }[c.job] ?? 0;
     if (c.phase === 'passed') {
       if (c.job !== 'jimusho' && c.job !== 'keiri') {
         c.job = 'jimusho';

@@ -1,4 +1,5 @@
 // 税理士になってからの分かれ道。おまかせの重みは推定（働き方の割合が業界の調査の丸めた値に合うように較正）。
+import { MONEY } from '../money.js';
 
 export const KAIGYO = {
   id: 'kaigyo', maxPerLife: 3, when: () => true, needs: s => ['shozoku', 'kigyonai'].includes(s.career.workStyle),
@@ -11,7 +12,7 @@ export const KAIGYO = {
     ],
   }),
   auto: { go: 42, stay: 58 },
-  apply: (k) => ({ lines: [{ text: k === 'go' ? '独立して、自分の事務所を開くと決めました。' : '今の職場で続けることにしました。' }], apply: st => { st.career.kaigyoPlan = k === 'go'; } }),
+  apply: (k) => ({ lines: [{ text: k === 'go' ? '独立して、自分の事務所を開くと決めました。' : '今の職場で続けることにしました。' }], apply: st => { st.career.kaigyoPlan = k === 'go'; if (k === 'go') st.career.kaigyoPlanAt = st.age; } }),
 };
 
 export const SHAIN = {
@@ -171,10 +172,17 @@ export const YUZURIUKE = {
     ],
   }),
   auto: { yes: 50, no: 50 },
-  apply: (k, s, ctx) => ({
-    lines: [{ text: k === 'yes' ? '先輩の事務所を譲り受けました。顧問先に一軒ずつ挨拶に回りました。' : '今の顧問先で手一杯だと、丁寧に断りました。' }],
-    apply: st => { if (k === 'yes') { st.career.clients += 10 + Math.floor(ctx.rng() * 16); st.career.staff += 1; addPath(st, 'yuzuriuke'); } },
-  }),
+  // 譲り受けの代金は、引き継ぐ顧問先1件あたりの額（推定）を、事務所の譲り受けの借入金にする
+  apply: (k, s, ctx) => {
+    if (k !== 'yes') return { lines: [{ text: '今の顧問先で手一杯だと、丁寧に断りました。' }] };
+    const gained = 10 + Math.floor(ctx.rng() * 16);
+    const price = gained * MONEY.turning.value.yuzuriukePerClient;
+    return {
+      lines: [{ text: '先輩の事務所を譲り受けました。顧問先に一軒ずつ挨拶に回りました。' }],
+      apply: st => { st.career.clients += gained; st.career.staff += 1; addPath(st, 'yuzuriuke'); },
+      money: [{ op: 'loan', kind: 'yuzuriuke', amount: price, years: MONEY.kaigyoFund.value.years }],
+    };
+  },
 };
 
 export const MODORU = {

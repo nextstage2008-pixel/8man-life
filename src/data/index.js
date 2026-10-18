@@ -11,9 +11,10 @@ import { HISTORY, IMAGINE_LINE_YEAR } from './history.js';
 import { ANACHRONISM } from './anachronism.js';
 import { ROLES } from './roles.js';
 import { ERA_HEISEI } from './era-heisei.js';
+import { MONEY } from './money.js';
 
 export const DATA = {
   DATA_VERSION, SOURCES, SEIDO, EXAM, ROUTES, PRE, LIFE, CAUSES, PREFS, NAMES, SURNAMES,
-  HISTORY, IMAGINE_LINE_YEAR, ANACHRONISM, ROLES,
+  HISTORY, IMAGINE_LINE_YEAR, ANACHRONISM, ROLES, MONEY,
   ERAS: { heisei: ERA_HEISEI },
 };
