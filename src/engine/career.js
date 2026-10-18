@@ -64,9 +64,11 @@ export const CAREER_SYSTEM = {
     if (c.workStyle === 'kaigyo' && c.clients >= 35 && c.staff >= 1 && s.age - c.kaigyoAt >= 5 && once('hojinka') && ctx.rng() < 0.06) items.push({ t: monthT(9), type: 'decision', ref: HOJINKA });
     if (c.workStyle === 'kaigyo' && s.age - c.kaigyoAt >= 3 && s.age <= 65 && once('yuzuriuke') && ctx.rng() < 0.015) items.push({ t: monthT(11), type: 'decision', ref: YUZURIUKE });
     if (c.workStyle === 'kaigyo' && s.age - c.kaigyoAt >= 2 && s.age - c.kaigyoAt <= 6 && c.clients < 8 && s.age < 60 && once('modoru') && ctx.rng() < 0.25) items.push({ t: monthT(10), type: 'decision', ref: MODORU });
-    // 引退：開業は70・77歳（85歳は聞かずに廃業）、それ以外は65・70・75歳に聞く
+    // 引退：開業は70・77歳（85歳は聞かずに廃業）、それ以外は65・70・75歳に聞く。
+    // 最後の年を過ぎてから登録した人・働き方が変わった人（76歳以後の法人化など）も、登録から3年たてば聞かずに引退する
     const askAges = c.workStyle === 'kaigyo' ? [70, 77, 85] : [65, 70, 75];
-    if (askAges.includes(s.age) && c.retirePlan !== 'retire') items.push({ t: monthT(10), type: 'decision', ref: c.workStyle === 'kaigyo' ? { ...OWNER_RETIRE, certainSkip: st => (st.age >= 85 ? 'haigyo' : null) } : { ...EMP_RETIRE, certainSkip: st => (st.age >= 75 ? 'retire' : null) } });
+    const late = s.age > askAges.at(-1) && s.age - (c.registeredAt ?? s.age) >= 3;
+    if ((askAges.includes(s.age) || late) && c.retirePlan !== 'retire') items.push({ t: monthT(10), type: 'decision', ref: c.workStyle === 'kaigyo' ? { ...OWNER_RETIRE, certainSkip: st => (st.age >= 85 ? 'haigyo' : null) } : { ...EMP_RETIRE, certainSkip: st => (st.age >= 75 ? 'retire' : null) } });
     return items;
   },
   end(s, ctx) {

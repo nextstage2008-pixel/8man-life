@@ -1,7 +1,7 @@
 // 場面のドット絵（題名と場面の絵の設計書 4.4）。どの場面を描くか・誰を描くか・一行の説明・絵の部品（四角の並び）を、
 // 行に添えた場面の状態（engine/scene-state.js）から決める。描くのは src/ui/scene-canvas.js。本家の絵は写さない。
 export const SCENE_KEYS = ['home', 'school', 'desk', 'jimusho', 'keiri', 'zeimusho', 'kansa', 'houritsu', 'own', 'engawa'];
-// 家族を描く場面（家の中や家の前）。職場と学校は本人と同僚（友だち）1人で、家族は一行の説明にだけ出す
+// 家族を描く場面（家の中や家の前）。職場と学校は本人と同僚（友だち）1人で、家族は一行の説明にだけ出す（家族の年は家の場面になる）
 export const FAMILY_SCENES = ['home', 'desk', 'engawa'];
 
 const W = 128, H = 40, GY = 33; // 低い解像度の升目と、地面の高さ
@@ -15,7 +15,14 @@ const STUDY = ['aspirant', 'examinee', 'cpa-exam', 'law-exam', 'passed'];
 
 const inSchool = s => s.age <= 18 || (s.age <= 22 && s.univ !== false);
 
+// 家族の年（結婚・子の誕生・親と同居の年と次の年）は、職場や学校の立場でも、一緒に暮らす人がいれば家の場面にする
 function keyOf(s) {
+  const key = workKeyOf(s);
+  const together = s.spouse || s.kids.length > 0 || s.parents.length > 0;
+  return s.familyYear && together && !FAMILY_SCENES.includes(key) ? 'home' : key;
+}
+
+function workKeyOf(s) {
   if (s.phase === 'retired') return 'engawa';
   if (s.phase === 'registered') return { kaigyo: 'own', kigyonai: 'keiri' }[s.workStyle] ?? 'jimusho';
   if (s.phase === 'tax-office') return 'zeimusho';

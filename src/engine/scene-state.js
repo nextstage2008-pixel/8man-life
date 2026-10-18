@@ -5,19 +5,22 @@ export const HOME_TEXT_RULES = [
   { fx: 'kid-out', re: /が家を出て、部屋が一つ空きました/ },
   { fx: 'parents-back', re: /年を取った親と、一緒に暮らすことになりました|実家に戻り、親と同じ食卓|親を家に迎え/ },
   { fx: 'apart', re: /単身で赴任しました|単身赴任の部屋で/ },
+  // 家族の年（結婚・子の誕生）。孫の誕生・本人の誕生の行（「…家に、」）・「取引が生まれました」などは not で外す
+  { fx: 'family-year', re: /と結婚しました。|が生まれました。/, not: /^孫の|^初孫の|、/ },
 ];
 
 const AT_HOME_UNTIL = 22; // 出来事がなくても、本人と子はこの年で家を出る
 const APART_YEARS = 2; // 単身赴任で家族を描かない年数（赴任した年からこの年数のあとの年まで）
 
 export function homeFxOf(text) {
-  return HOME_TEXT_RULES.find(r => r.re.test(text))?.fx ?? null;
+  return HOME_TEXT_RULES.find(r => r.re.test(text) && !r.not?.test(text))?.fx ?? null;
 }
 
 export function applyHome(s, fx, age = s.age) {
   const h = s.home;
   if (fx === 'leave-parents') h.leftParents = true;
-  else if (fx === 'parents-back') h.parentsBack = true;
+  else if (fx === 'parents-back') { h.parentsBack = true; h.familyAt = age; }
+  else if (fx === 'family-year') h.familyAt = age;
   else if (fx === 'apart') h.apartUntil = age + APART_YEARS;
   else if (fx === 'kid-out') for (const c of s.children) if (age - c.bornAge === 18) h.kidsOut.add(c.name);
 }
@@ -38,6 +41,8 @@ export function sceneState(s, age = s.age) {
     residence: s.residence || s.pref, surname: s.surname, univ: s.flags.has('will-univ'),
     // 単身赴任の間は、家族を残して一人で暮らす
     apart,
+    // 家族の年：結婚・子の誕生・親と同居の行から、次の年の終わりまで（絵は家の場面にして家族を描く）
+    familyYear: h.familyAt != null && age >= h.familyAt && age <= h.familyAt + 1,
     spouse: married && !apart,
     kids: apart ? [] : kids,
     parents: apart ? [] : parents,

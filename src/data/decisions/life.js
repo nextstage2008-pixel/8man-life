@@ -14,9 +14,19 @@ export const MARRY = {
   apply: (k) => ({ lines: k === 'no' ? [{ text: 'もう少し考えることにしました。' }] : [] , apply: st => { st._marryAnswer = k; } }),
 };
 
+function smokeFrom(s) {
+  const c = s.career;
+  if (s.flags.has('shushoku') || c.phase === 'tax-office' || c.job === 'jimusho' || c.job === 'keiri') return '職場の先輩';
+  if (s.flags.has('will-univ') && s.age < 22) return '大学の先輩';
+  if (s.flags.has('boki1') && s.age <= 20) return '専門学校の先輩';
+  if (c.job === 'senen') return '受験仲間';
+  return '職場の先輩';
+}
+
 export const SMOKE = {
   id: 'smoke', ages: [20, 20], when: () => true,
-  build: () => ({ title: 'たばこ', body: '職場の先輩に、たばこを勧められました。', choices: [{ k: 'no', label: '吸わない' }, { k: 'yes', label: '吸ってみる' }] }),
+  // 20歳の居場所で、勧める人を変える（大学・専門学校の学生に「職場」と書かない）
+  build: s => ({ title: 'たばこ', body: `${smokeFrom(s)}に、たばこを勧められました。`, choices: [{ k: 'no', label: '吸わない' }, { k: 'yes', label: '吸ってみる' }] }),
   auto: (s, ctx) => { const r = ctx.data.LIFE[s.era].smokingRate[s.sex].value; return { yes: r * 100, no: (1 - r) * 100 }; },
   apply: (k) => ({ lines: [{ text: k === 'yes' ? '一本もらって吸いました。それから、吸うようになりました。' : 'たばこは断りました。' }], apply: st => { st.habits.smoke = k === 'yes'; } }),
 };
