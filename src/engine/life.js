@@ -9,6 +9,7 @@ import { buildWorld } from './world.js';
 import { DATA } from '../data/index.js';
 import { homeFxOf, applyHome, sceneState } from './scene-state.js';
 import { moneyView, moneySummary } from './money.js';
+import { householdIncome, jobLabel } from './parents.js';
 
 // 出来事・分かれ道・仕組みの置き場（world.js でまとめる）
 export const WORLD = buildWorld();
@@ -62,7 +63,8 @@ export function birthCard(config, data = DATA) {
     surname: s.surname, given: s.name, name: `${s.surname} ${s.name}`, sex: s.sex, sexLabel: s.sex === 'female' ? '女の子' : '男の子',
     pref: s.pref, birthYear: s.birthYear,
     tierDots: '●'.repeat(s.tier) + '○'.repeat(5 - s.tier), tierLabel: `5段階中${s.tier}`,
-    parents: s.parents.map(p => ({ role: p.role === 'father' ? '父' : '母', age: p.age, name: p.name })),
+    parents: s.parents.map(p => ({ role: p.role === 'father' ? '父' : '母', age: p.age, name: p.name, job: jobLabel(p, data) })),
+    houseIncome: householdIncome(s, data),
     siblings: s.siblings.map(b => ({ label: sib(b), name: b.name, ageDiff: s.birthYear - b.birthYear })),
     e0, minutes: Math.round((secondsPerYear(e0) * e0) / 60),
     stats: { ...s.stats },

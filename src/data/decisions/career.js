@@ -94,7 +94,7 @@ const addPath = (st, p) => { const a = (st.career.paths = st.career.paths ?? [])
 export { addPath };
 
 export const TSUGU = {
-  id: 'tsugu', when: () => true, needs: s => !s.career.kaigyoPlan,
+  id: 'tsugu', when: () => true, needs: s => !s.career.kaigyoPlan && s.career.workStyle === 'shozoku' && s.career.firm === 'kojin',
   build: () => ({
     title: '所長の事務所を継ぎますか',
     body: '所長から、引退するので事務所を継いでほしいと言われました。',

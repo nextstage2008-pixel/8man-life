@@ -1,5 +1,6 @@
 // 出生届の画面（設計書5節2）。名刺風のカードに、生まれたときの姿を出す。
 import { esc } from '../core/escape.js';
+import { formatMan } from '../core/money-format.js';
 
 export function birthView(card) {
   const row = (label, value) => `<div class="fact"><dt>${esc(label)}</dt><dd>${value}</dd></div>`;
@@ -15,8 +16,8 @@ export function birthView(card) {
     <dl class="facts">
       ${row('性別', esc(card.sex === 'female' ? '女性' : '男性'))}
       ${row('生まれた県', esc(card.pref))}
-      ${row('家の暮らし向き', `<span class="dots" aria-hidden="true">${esc(card.tierDots)}</span> ${esc(card.tierLabel)}`)}
-      ${card.parents.map(p => row(p.role, `${esc(p.name)}（${esc(p.age)}歳）`)).join('')}
+      ${card.parents.map(p => row(p.role, `${esc(p.name)}（${esc(p.age)}歳）<span class="fact-sub">${esc(p.job)}</span>`)).join('')}
+      ${row('世帯年収', `${formatMan(card.houseIncome)}<span class="fact-sub"><span class="dots" aria-hidden="true">${esc(card.tierDots)}</span> ${esc(card.tierLabel)}</span>`)}
       ${row('きょうだい', sibs)}
       ${row('平均寿命', `約${esc(Math.round(card.e0))}歳`)}
       ${row('1倍速の長さ', `約${esc(card.minutes)}分`)}

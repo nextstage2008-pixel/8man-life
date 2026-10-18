@@ -12,9 +12,10 @@ import { ANACHRONISM } from './anachronism.js';
 import { ROLES } from './roles.js';
 import { ERA_HEISEI } from './era-heisei.js';
 import { MONEY } from './money.js';
+import { PARENTS, JOB_LABEL as PARENTS_JOB_LABEL } from './parents.js';
 
 export const DATA = {
   DATA_VERSION, SOURCES, SEIDO, EXAM, ROUTES, PRE, LIFE, CAUSES, PREFS, NAMES, SURNAMES,
-  HISTORY, IMAGINE_LINE_YEAR, ANACHRONISM, ROLES, MONEY,
+  HISTORY, IMAGINE_LINE_YEAR, ANACHRONISM, ROLES, MONEY, PARENTS, PARENTS_JOB_LABEL,
   ERAS: { heisei: ERA_HEISEI },
 };

@@ -5,6 +5,7 @@ import { createState } from './state.js';
 import { namesFor } from '../data/names.js';
 import { clamp } from './odds.js';
 import { initMoney } from './money.js';
+import { initParents } from './parents.js';
 
 const pickBin = (rng, dist) => {
   const i = Number(pickWeighted(rng, Object.fromEntries(dist.map((b, k) => [k, b.w]))));
@@ -57,7 +58,6 @@ export function birth(config, data) {
   const prefW = Object.fromEntries(data.PREFS.map(p => [p.name, birthMode === 'population' ? p.pop2024 : p.births2000]));
   s.pref = pickWeighted(rng, prefW);
   s.residence = s.pref;
-  s.tier = randInt(rng, 1, 5);
   s.talent = clamp(normal(rng, 0, 1), -3, 3);
   s.stats.sm = clamp(Math.round(55 + 12 * s.talent), 5, 95);
 
@@ -78,6 +78,8 @@ export function birth(config, data) {
   }
   // 受験の力：才能・勉強のやり方・粘り強さをまとめたもの（才能と相関・標準偏差1）。すんなり受かる人と苦労する人を分ける
   s.aptitude = clamp(0.6 * s.talent + 0.8 * normal(rng, 0, 1), -3, 3);
+  // 親の職業と世帯年収（5段階の暮らし向きは世帯年収から）
+  initParents(s, rng, data);
   initMoney(s, data);
   return s;
 }

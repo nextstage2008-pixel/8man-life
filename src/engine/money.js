@@ -1,6 +1,7 @@
 // お金の計算（お金と転機の設計書4）。金額は万円。貯蓄はマイナスにせず、足りない分は暮らしの借金にする。
 // 自己破産は描かない：返せない年は返済を延ばして文に出す。家のローンは亡くなると消える（団体信用生命保険）。
 import { DATA } from '../data/index.js';
+import { householdIncome, parentIncome, jobLabel } from './parents.js';
 
 export const LOAN_LABEL = { shogakukin: '奨学金', kaigyo: '開業資金', jutaku: '家のローン', yuzuriuke: '事務所の譲り受け', seikatsu: '暮らしの借金' };
 
@@ -13,7 +14,8 @@ export const livingAtHome = s => !s.home.leftParents && !s.spouse && s.age < 22 
 export function initMoney(s, data = DATA) {
   const M = data.MONEY;
   const t = Math.min(5, Math.max(1, s.tier ?? 3)) - 1;
-  s.money.house = { income: M.householdIncome.value[t], savings: M.householdSavingsStart.value[t] };
+  // 世帯年収は親の職業から（親の職業がない古い形の人は、5段階の平均）。家の貯蓄の始まりは5段階から
+  s.money.house = { income: s.parents.some(p => p.job) ? householdIncome(s, data) : M.householdIncome.value[t], savings: M.householdSavingsStart.value[t] };
 }
 
 // startAge：この年齢から返し始める（奨学金は学校を出てから）
@@ -236,9 +238,12 @@ export function moneyView(s, data = DATA) {
   const child = m.income <= 0 && inSchool(s);
   const retired = s.career.phase === 'retired';
   const loans = m.loans.filter(l => l.left > 0).sort((a, b) => b.left - a.left);
+  // 学校に通う間は、世帯年収と、父・母の職業と年収（生きている親だけ）
+  const parents = child && s.parents.some(p => p.job) ? s.parents.filter(p => p.alive !== false).map(p => ({ role: p.role === 'father' ? '父' : '母', job: jobLabel(p, data), income: parentIncome(s, p, data) })) : null;
   return {
-    incomeLabel: child ? '家の年収' : retired ? '年金' : '年収',
-    income: Math.round(child ? m.house.income : retired ? pensionOf(s, data.MONEY) : m.income),
+    incomeLabel: child ? '世帯年収' : retired ? '年金' : '年収',
+    income: Math.round(child ? (parents ? householdIncome(s, data) : m.house.income) : retired ? pensionOf(s, data.MONEY) : m.income),
+    ...(parents ? { parents } : {}),
     savingsLabel: child ? '家の貯蓄' : '貯蓄',
     savings: Math.round(child ? m.house.savings : m.savings),
     debt: Math.round(debtTotal(s)),

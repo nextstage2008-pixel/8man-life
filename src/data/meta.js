@@ -1,5 +1,5 @@
 // データと計算の版。再現リンクと共有ページに入れ、古い版のリンクを見分ける。
-export const DATA_VERSION = '0.2.0';
+export const DATA_VERSION = '0.3.0';
 
 // 出典の一覧。データの各値の src はここのキーを指す。
 // 'industry-survey' は業界の調査をもとに丸めた値。
@@ -46,6 +46,10 @@ export const SOURCES = {
   'jili-zenkoku-2024': { title: '生命保険文化センター「2024年度 生命保険に関する全国実態調査」（介護費用）', url: 'https://www.jili.or.jp/lifeplan/lifesecurity/1116.html', retrieved: '2026-10-18' },
   'mhlw-nenkin-r6': { title: '厚生労働省「令和6年度 厚生年金保険・国民年金事業の概況」', url: 'https://www.mhlw.go.jp/content/001617995.pdf', retrieved: '2026-10-18' },
   'mhlw-shuro-r5': { title: '厚生労働省「令和5年就労条件総合調査の概況」（退職給付）', url: 'https://www.mhlw.go.jp/toukei/itiran/roudou/jikan/syurou/23/dl/gaikyou.pdf', retrieved: '2026-10-18' },
+  'mhlw-jdss-h12': { title: '厚生労働省「平成12年度 人口動態職業・産業別統計」表11 嫡出出生数（父の職業別）・表12 出生数（母の職業別）', url: 'https://www.e-stat.go.jp/dbview?sid=0003402426', retrieved: '2026-10-18' },
+  'soumu-shugyo-r4': { title: '総務省統計局「令和4年就業構造基本調査」表04200（男女・年齢・従業上の地位・雇用形態・所得・職業別の有業者）', url: 'https://www.e-stat.go.jp/dbview?sid=0004008158', retrieved: '2026-10-18' },
+  'mhlw-kokumin-h15': { title: '厚生労働省「平成15年国民生活基礎調査」概要 表14 末子の年齢階級別にみた父母の就業状況別児童のいる世帯数の構成割合', url: 'https://www.e-stat.go.jp/dbview?sid=0003133455', retrieved: '2026-10-18' },
+  'jil-blt-2015-09': { title: '労働政策研究・研修機構「児童のいる世帯の母の仕事の状況」（ビジネス・レーバー・トレンド2015年9月号・国民生活基礎調査 平成26年から）', url: 'https://www.jil.go.jp/kokunai/blt/backnumber/2015/09/061.pdf', retrieved: '2026-10-18' },
   'imagined': { title: '想像の出来事（実際の出来事ではありません）', url: '', retrieved: '2026-10-17' },
   'agora-kanpou': { title: 'アゴラ「税理士試験 官報合格までの平均年数（開示請求のデータ）」（公式ではない）', url: 'https://agora-web.jp/?p=267573', retrieved: '2026-10-17' },
   'nta-gakui-menjo': { title: '国税庁「改正税理士法の『学位による試験科目免除』制度のQ＆A」', url: 'https://www.nta.go.jp/taxes/zeirishi/zeirishishiken/kaisei-qa/menu.htm', retrieved: '2026-10-17' },

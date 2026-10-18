@@ -21,7 +21,8 @@ export const PRE_DECISIONS = [
     build: s => ({ title: 'どこの大学に行きますか', body: `${s.pref}を出るかどうか、迷っています。`, choices: [choice('jimoto', '地元の大学に行く'), choice('tokai', '都会の大学に行く', '一人暮らしが始まる')] }),
     auto: { jimoto: 50, tokai: 50 },
     apply: k => ({ lines: [{ text: k === 'jimoto' ? '地元の大学に進むことにしました。' : '都会の大学に進むことにしました。' }], apply: st => { if (k === 'tokai') st.residence = '東京都'; } }) }),
-  D('shinro-18', { ages: [18, 18], when: () => true, needs: s => !s.flags.has('will-univ') && s.route !== 'tax-office',
+  // 18歳で事務所や会社に勤めて志す人は、その年の3月から働くので聞かない
+  D('shinro-18', { ages: [18, 18], when: () => true, needs: s => !s.flags.has('will-univ') && s.route !== 'tax-office' && !(s.aspireAge <= 18 && ['jimusho', 'keiri'].includes(s.aspireKind)),
     build: () => ({ title: '高校を出たらどうしますか', body: '進路を決める時期になりました。', choices: [choice('shushoku', '就職する'), choice('senmon', '専門学校で簿記を学ぶ')] }),
     auto: { shushoku: 55, senmon: 45 },
     apply: k => ({ lines: [{ text: k === 'shushoku' ? '地元の会社に就職しました。' : '専門学校の会計の科に入りました。' }], apply: st => { if (k === 'senmon') { st.flags.add('boki1'); st.school.senmon = true; st.schoolEndAge = 20; } else st.flags.add('shushoku'); } }) }),

@@ -29,7 +29,7 @@ export function sceneBlock({ caption }) {
 </section>`;
 }
 
-// 年収・貯蓄・借入金（いちばん新しい行の money）。子どものうちは家の年収・家の貯蓄、引退後は年金
+// 年収・貯蓄・借入金（いちばん新しい行の money）。子どものうちは世帯年収（父と母の職業と年収も）・家の貯蓄、引退後は年金
 export function moneyRow(money) {
   if (!money) return '';
   const debt = money.debt > 0 ? `${formatMan(money.debt)}${money.debtReason ? `<span class="money-sub">${esc(money.debtReason)}</span>` : ''}` : 'なし';
@@ -37,6 +37,7 @@ export function moneyRow(money) {
     <div class="money-item" data-role="income"><span class="money-label">${esc(money.incomeLabel)}</span><span class="money-num">${formatMan(money.income)}</span></div>
     <div class="money-item" data-role="savings"><span class="money-label">${esc(money.savingsLabel)}</span><span class="money-num">${formatMan(money.savings)}</span></div>
     <div class="money-item" data-role="debt"><span class="money-label">借入金</span><span class="money-num">${debt}</span></div>
+    ${money.parents?.length ? `<p class="money-parents" data-role="parents">${money.parents.map(p => `<span>${esc(p.role)} ${esc(p.job)}${p.income > 0 ? ` ${formatMan(p.income)}` : ''}</span>`).join('')}</p>` : ''}
   </div>`;
 }
 

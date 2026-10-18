@@ -211,6 +211,9 @@ a.btn-primary, a.btn-soft, a.btn-plain { display: flex; align-items: center; jus
 .money-label { font-size: 11px; color: var(--sub); }
 .money-num { font-size: 15px; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
 .money-sub { display: block; font-size: 10px; font-weight: 500; color: var(--sub); }
+/* 学校に通う間の、父と母の職業と年収（世帯年収の内訳） */
+.money-parents { grid-column: 1 / -1; margin: 0; display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 12px; color: var(--sub); }
+.fact-sub { display: block; font-size: 13px; color: var(--sub); font-weight: 500; }
 .money-sum { margin: 0; display: grid; gap: 6px; }
 .money-sum div { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
 .money-sum dt { color: var(--sub); white-space: nowrap; flex-shrink: 0; }
