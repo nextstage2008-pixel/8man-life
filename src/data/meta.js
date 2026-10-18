@@ -50,6 +50,7 @@ export const SOURCES = {
   'soumu-shugyo-r4': { title: '総務省統計局「令和4年就業構造基本調査」表04200（男女・年齢・従業上の地位・雇用形態・所得・職業別の有業者）', url: 'https://www.e-stat.go.jp/dbview?sid=0004008158', retrieved: '2026-10-18' },
   'mhlw-kokumin-h15': { title: '厚生労働省「平成15年国民生活基礎調査」概要 表14 末子の年齢階級別にみた父母の就業状況別児童のいる世帯数の構成割合', url: 'https://www.e-stat.go.jp/dbview?sid=0003133455', retrieved: '2026-10-18' },
   'jil-blt-2015-09': { title: '労働政策研究・研修機構「児童のいる世帯の母の仕事の状況」（ビジネス・レーバー・トレンド2015年9月号・国民生活基礎調査 平成26年から）', url: 'https://www.jil.go.jp/kokunai/blt/backnumber/2015/09/061.pdf', retrieved: '2026-10-18' },
+  'natural-earth': { title: 'Natural Earth「Admin 0 – Countries」1:10m（日本から見た国の境界の版・パブリックドメイン。最初の画面の地図の海岸線）', url: 'https://www.naturalearthdata.com/', retrieved: '2026-10-18' },
   'imagined': { title: '想像の出来事（実際の出来事ではありません）', url: '', retrieved: '2026-10-17' },
   'agora-kanpou': { title: 'アゴラ「税理士試験 官報合格までの平均年数（開示請求のデータ）」（公式ではない）', url: 'https://agora-web.jp/?p=267573', retrieved: '2026-10-17' },
   'nta-gakui-menjo': { title: '国税庁「改正税理士法の『学位による試験科目免除』制度のQ＆A」', url: 'https://www.nta.go.jp/taxes/zeirishi/zeirishishiken/kaisei-qa/menu.htm', retrieved: '2026-10-17' },

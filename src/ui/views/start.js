@@ -6,6 +6,7 @@ import { serverEnabled } from '../core/net.js';
 import { japanMapSvg } from './japan-map.js';
 import { PREFS } from '../../data/prefs.js';
 import { PREF_GEO } from '../../data/pref-geo.js';
+import { JAPAN_COAST } from '../../data/japan-coast.js';
 
 const ERAS = [
   { label: '平成', sub: '2000年ごろ生まれ', ready: true },
@@ -26,7 +27,7 @@ export function startView({ birthMode = 'births', resumable = null, notice = nul
   const mode = (value, label, sub) => `<button class="option" type="button" data-action="mode" data-value="${value}" aria-pressed="${birthMode === value}"><span class="option-label">${esc(label)}</span><span class="option-sub">${esc(sub)}</span></button>`;
   return `<div class="screen start">
   <header class="start-head">
-    <div class="map-wrap">${japanMapSvg(PREFS, PREF_GEO)}</div>
+    <div class="map-wrap">${japanMapSvg(PREFS, PREF_GEO, { coast: JAPAN_COAST })}</div>
     <p class="kicker">税理士の一生シミュレーター</p>
     <p class="kicker-sub">公的な統計にもとづく</p>
     <h1 class="title">8万分の<span class="one">1</span></h1>
