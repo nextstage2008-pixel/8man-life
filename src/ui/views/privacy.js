@@ -3,6 +3,7 @@
 import { authorLink } from './author.js';
 import { SITE } from '../site.js';
 import { serverEnabled } from '../core/net.js';
+import { analyticsOn } from '../core/analytics.js';
 
 const head = `<header class="share-head"><a class="share-title" href="./">8万分の1</a></header>
   <h1 class="page-title">プライバシー</h1>
@@ -14,7 +15,14 @@ const local = `<section class="card">
     <h2 class="sec">端末に残すもの</h2>
     <p>続きから遊ぶための途中の記録、速さの好み、30日の判定止め（振り返りなどに危ない言葉が書かれたとき）を、ブラウザの保存領域に残します。どこにも送りません。`;
 
+// 開いた人の数（Cloudflare Web Analytics）。トークンのある版だけ
+const counting = `<section class="card">
+    <h2 class="sec">開いた人の数</h2>
+    <p>このサイトを開いた人の数を知るため、Cloudflare Web Analytics を使います。届くのは、開いたページの住所、どのページから来たか、ブラウザと端末の種類、国、表示にかかった時間です。Cookie は使わず、1人ずつを見分けることもしません。作者が見るのは合計の数だけです。</p>
+  </section>`;
+
 function withServer(site) {
+  const on = analyticsOn(site);
   return `${head}
   <section class="card">
     <h2 class="sec">サーバーに送るもの</h2>
@@ -29,9 +37,10 @@ function withServer(site) {
     <p>あなたの名前や連絡先は聞きません。振り返りの記入欄に書いた文と、故人へのひとことは、どこにも送りません。投稿の文や画像の札にも入りません。</p>
     <p>主人公の名前は、計算で作った架空の名前です。投稿の文・画像の札・共有ページに出ます。</p>
   </section>
+  ${on ? counting : ''}
   <section class="card">
     <h2 class="sec">トラッキング拒否</h2>
-    <p>ブラウザでトラッキング拒否（DNT）やグローバル・プライバシー・コントロール（GPC）を設定していると、みんなの集計には送りません。サーバーも、その設定のついた要求は数えません。共有とご意見は、ボタンを押したときだけ送ります。</p>
+    <p>ブラウザでトラッキング拒否（DNT）やグローバル・プライバシー・コントロール（GPC）を設定していると、みんなの集計には送りません。${on ? '開いた人の数にも数えません（その仕組みを読み込みません）。' : ''}サーバーも、その設定のついた要求は数えません。共有とご意見は、ボタンを押したときだけ送ります。</p>
   </section>
   ${local}作者は Cookie を使いません（配信の Cloudflare が、守りのために付けることがあります）。</p>
   </section>

@@ -120,6 +120,19 @@ button:disabled { cursor: default; }
 /* 分かれ道の板 */
 .sheet-wrap { position: fixed; inset: 0; z-index: 10; background: rgba(29, 39, 51, 0.45); display: flex; align-items: flex-end; justify-content: center; }
 .sheet-wrap[hidden] { display: none; }
+/* 資格を取った札（真ん中に大きく。画面のどこを触っても続く） */
+.event-wrap { position: fixed; inset: 0; z-index: 20; background: rgba(29, 39, 51, 0.55); display: flex; align-items: center; justify-content: center; padding: 16px; cursor: pointer; }
+.event-wrap[hidden] { display: none; }
+.event-card { width: 100%; max-width: 420px; background: var(--card); border-radius: 24px; border-top: 6px solid var(--orange); padding: 26px 22px 20px; text-align: center; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 18px 48px rgba(0, 0, 0, 0.25); animation: event-pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.event-when { margin: 0; font-size: 12px; color: var(--sub); }
+.event-title { margin: 2px 0 4px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.event-sub { font-size: 18px; font-weight: 700; color: var(--ink); }
+.event-big { font-size: 44px; font-weight: 700; line-height: 1.2; letter-spacing: 0.06em; color: var(--orange); }
+.event-text { font-size: 15px; line-height: 1.8; margin: 0; }
+.event-hint { font-size: 12px; color: var(--sub); margin: 0; }
+/* 透明からは出さない（動きが遅れても札が見えるように）。少し小さい所から弾んで大きくなるだけ */
+@keyframes event-pop { from { transform: scale(0.85); } to { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .event-card { animation: none; } }
 .sheet { width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto; background: var(--card); border-radius: 24px 24px 0 0; padding: 10px 18px 24px; display: flex; flex-direction: column; gap: 12px; }
 .sheet-handle { align-self: center; width: 40px; height: 4px; border-radius: 2px; background: var(--rule); }
 .sheet-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--sub); }

@@ -50,6 +50,8 @@ export function canSit(s, kind, year) {
 
 const say = sayFresh;
 const line = (text, kind = 'ev') => ({ kind, text });
+// 資格を取った行（画面は流れを止めて札を出す）。kanpou＝5科目がそろう（官報合格）・gakui＝大学院の免除の認定でそろう
+const milestone = (l, kind) => ({ ...l, milestone: kind });
 const ACCOUNTING = ['boki', 'zaihyo'];
 
 function taxPassed(c) { return [...c.passed].filter(id => !ACCOUNTING.includes(id)); }
@@ -145,7 +147,7 @@ export const EXAM_SYSTEM = {
         if (examDone(cc)) {
           cc.phase = 'passed';
           cc.kanpouAge = st.age;
-          return [line(say(T.exemptDone[g.field], st, cx), 'big')];
+          return [milestone(line(say(T.exemptDone[g.field], st, cx), 'big'), 'gakui')];
         }
         return [line(say(T.nintei[g.field], st, cx))];
       } });
@@ -191,7 +193,7 @@ export const EXAM_SYSTEM = {
         if (cc.phase !== 'passed' && examDone(cc)) {
           cc.phase = 'passed';
           cc.kanpouAge = st.age;
-          out.push(line(say(T.kanpou, st, cx), 'big'));
+          out.push(milestone(line(say(T.kanpou, st, cx), 'big'), 'kanpou'));
         }
         return out;
       } });

@@ -19,6 +19,8 @@ export function needsKenshu(passYear, data) {
 
 const say = sayFresh;
 const ln = (text, kind = 'ev') => ({ kind, text });
+// 資格を取った行（画面は流れを止めて札を出す）。cpa＝公認会計士試験・law＝司法試験に受かる、ob＝税務署の人が税理士として登録する
+const milestone = (l, kind) => ({ ...l, milestone: kind });
 const pickBin = (rng, dist) => {
   const i = Number(pickWeighted(rng, Object.fromEntries(dist.map((b, k) => [k, b.w]))));
   return randInt(rng, dist[i].from, dist[i].to);
@@ -112,7 +114,7 @@ export const TAX_OFFICE_SYSTEM = {
       applyMoneyOps(s, [{ op: 'earn', amount: lump }], D);
       out.push(ln(`退職金は${Math.round(lump).toLocaleString('ja-JP')}万円でした。`));
       const style = ctx.rng() < 0.7 ? 'kaigyo' : 'shozoku';
-      out.push(...register(s, ctx, style, style === 'kaigyo' ? '自分の事務所' : '税理士法人', TO.register));
+      out.push(...register(s, ctx, style, style === 'kaigyo' ? '自分の事務所' : '税理士法人', TO.register).map(l => milestone(l, 'ob')));
     }
     return out;
   },
@@ -147,7 +149,7 @@ export const CPA_SYSTEM = {
         cc.auditFirm = pickWeighted(cx.rng, D.PRE.cpa.auditFirmSize.dist);
         cc.workplaces.push(CT.firmLabel[cc.auditFirm]);
         if (st.flags.has('will-univ') && st.age >= 18 && st.age <= 22) cc.inSchoolPass = true;
-        return [ln(cc.inSchoolPass ? say(CT.passInSchool, st, cx) : say(CT.pass, st, cx), 'big'), ln(say(CT.audit[cc.auditFirm], st, cx))];
+        return [milestone(ln(cc.inSchoolPass ? say(CT.passInSchool, st, cx) : say(CT.pass, st, cx), 'big'), 'cpa'), ln(say(CT.audit[cc.auditFirm], st, cx))];
       } });
     } else if (c.phase === 'cpa-exam' && ctx.rng() < 0.5) {
       items.push({ t: monthT(5), type: 'fixed', run: (st, cx) => [ln(say(CT.study, st, cx))] });
@@ -193,7 +195,7 @@ export const LAWYER_SYSTEM = {
     }
     if (c.phase === 'law-exam' && s.age === c.lawPassAge) {
       items.push({ t: monthT(11), type: 'fixed', run: (st, cx) => {
-        const out = [ln(say(LT.pass, st, cx), 'big')];
+        const out = [milestone(ln(say(LT.pass, st, cx), 'big'), 'law')];
         if (cx.rng() < cx.data.PRE.lawyer.taxLawElectiveShare.value * 5) { st.flags.add('tax-law-elective'); out.push(ln(say(LT.taxLaw, st, cx))); }
         st.career.lawPassed = true;
         return out;

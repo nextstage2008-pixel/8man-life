@@ -18,6 +18,7 @@ import { sceneOf, sceneLayout } from './core/scene.js';
 import { drawScene } from './scene-canvas.js';
 import { emptyLog, addToLog } from './core/log-order.js';
 import { decisionSheet } from './views/decision.js';
+import { eventView } from './views/event.js';
 import { endView } from './views/end.js';
 import { trackingRefused, livesPayload, sameChoiceRows, passYearsChart } from './core/minna.js';
 import { resolveShareUrl, feedbackPayload, openPostWindow, serverEnabled } from './core/net.js';
@@ -25,6 +26,7 @@ import { minnaView, livesLine } from './views/minna.js';
 import { feedbackSheet } from './views/feedback.js';
 import { postJson, getJson } from './api.js';
 import { SITE } from './site.js';
+import { analyticsBeacon } from './core/analytics.js';
 
 const VERSION = DATA.DATA_VERSION;
 const app = document.getElementById('app');
@@ -104,7 +106,7 @@ function showBirth(config, answers = null, fast = true, replay = false) {
 function beginLife() {
   S.screen = 'life';
   S.sharePromise = null;
-  S.player = createPlayer(S.config, { data: DATA, world: WORLD, answers: S.pendingAnswers, fast: S.fast });
+  S.player = createPlayer(S.config, { data: DATA, world: WORLD, answers: S.pendingAnswers, fast: S.fast, events: true });
   S.player.setSpeed(Number(getPref('8man.speed', 1)) || 1);
   S.years = new Map();
   S.log = emptyLog();
@@ -112,7 +114,7 @@ function beginLife() {
   S.sceneSig = '';
   S.money = null;
   S.moneySig = '';
-  app.innerHTML = '<div class="screen life"><div id="bar"></div><div id="scene"></div><div id="stats"></div><section id="log" class="log" aria-live="polite"></section></div><div class="controls-wrap" id="controls"></div><div class="sheet-wrap" id="sheet" hidden></div>';
+  app.innerHTML = '<div class="screen life"><div id="bar"></div><div id="scene"></div><div id="stats"></div><section id="log" class="log" aria-live="polite"></section></div><div class="controls-wrap" id="controls"></div><div class="sheet-wrap" id="sheet" hidden></div><div class="event-wrap" id="event" data-action="event-ok" hidden></div>';
   renderControls();
   updateProfile(0, S.card.birthYear);
   window.scrollTo(0, 0);
@@ -132,6 +134,7 @@ function handle(events) {
   for (const e of events) {
     if (e.type === 'line') addLine(e.line);
     else if (e.type === 'decision') { drawLatestScene(); drawLatestMoney(); showDecision(e.view); }
+    else if (e.type === 'event') { drawLatestScene(); drawLatestMoney(); showEvent(e.line); }
     else if (e.type === 'end') { showEnd(); return; }
   }
   drawLatestScene();
@@ -215,6 +218,23 @@ function closeSheet() {
   if (!sheet) return;
   sheet.hidden = true;
   sheet.innerHTML = '';
+}
+
+// 資格を取った札：流れを止めて真ん中に出し、画面のどこかを触ったら閉じて続ける
+function showEvent(line) {
+  const el = document.getElementById('event');
+  if (!el) return;
+  el.innerHTML = eventView(line);
+  el.hidden = false;
+  el.querySelector('[data-action="event-ok"]')?.focus({ preventScroll: true });
+}
+
+function closeEvent() {
+  const el = document.getElementById('event');
+  if (!el || el.hidden) return;
+  el.hidden = true;
+  el.innerHTML = '';
+  S.player?.continueEvent();
 }
 
 // 答える
@@ -369,6 +389,7 @@ document.addEventListener('click', ev => {
   else if (a === 'toggle') { if (S.player.state === 'paused') S.player.resume(); else S.player.pause(); renderControls(); }
   else if (a === 'speed') { const x = Number(b.dataset.value); S.player.setSpeed(x); setPref('8man.speed', x); renderControls(); }
   else if (a === 'skip') { handle(S.player.skipToDecision()); renderControls(); }
+  else if (a === 'event-ok') closeEvent();
   else if (a === 'choose') choose(b.dataset.k);
   else if (a === 'auto') choose(undefined);
   else if (a === 'support-ok') { const next = S.supportNext; S.supportNext = null; next?.(); }
@@ -410,4 +431,16 @@ window.addEventListener('hashchange', () => {
   else if (location.hash === '#feedback') openFeedbackFromHash();
 });
 
+// 開いた人の数（Cloudflare Web Analytics）。読み込むかどうかは core/analytics.js が決める（トラッキング拒否なら読み込まない）
+function loadAnalytics() {
+  const b = analyticsBeacon(SITE, navigator, window);
+  if (!b) return;
+  const el = document.createElement('script');
+  el.type = 'module'; // Cloudflare の貼り付け用の文と同じ読み込み方
+  el.src = b.src;
+  el.setAttribute('data-cf-beacon', b.beacon);
+  document.head.appendChild(el);
+}
+
 boot();
+loadAnalytics();
